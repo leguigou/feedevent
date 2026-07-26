@@ -18,7 +18,9 @@
             @endif
 
             @if (session('ics-import'))
-                @php($result = session('ics-import'))
+                @php
+                    $result = session('ics-import');
+                @endphp
                 <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300" role="status">
                     {{ $result['imported'] }} événement(s) importé(s) comme brouillons.
                     @if ($result['skipped'])
@@ -51,10 +53,10 @@
                         <label
                             class="group flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed px-5 py-7 text-center transition"
                             :class="dragging ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/30' : 'border-gray-300 bg-gray-50 hover:border-brand-400 hover:bg-brand-50/50 dark:border-gray-700 dark:bg-gray-900/60 dark:hover:border-brand-600'"
-                            @dragenter.prevent="dragging = true"
-                            @dragover.prevent="dragging = true"
-                            @dragleave.prevent="dragging = false"
-                            @drop.prevent="
+                            x-on:dragenter.prevent="dragging = true"
+                            x-on:dragover.prevent="dragging = true"
+                            x-on:dragleave.prevent="dragging = false"
+                            x-on:drop.prevent="
                                 dragging = false;
                                 if ($event.dataTransfer.files.length) {
                                     $refs.calendar.files = $event.dataTransfer.files;
@@ -74,7 +76,7 @@
                                 name="calendar"
                                 accept=".ics,text/calendar"
                                 required
-                                @change="fileName = $event.target.files[0]?.name || ''"
+                                x-on:change="fileName = $event.target.files[0]?.name || ''"
                             >
                         </label>
 
