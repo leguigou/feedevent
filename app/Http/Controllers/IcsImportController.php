@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\ImportLog;
 use App\Services\IcsParser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class IcsImportController extends Controller
         $imported = 0;
         $skipped = 0;
         $failed = 0;
+        $details = [];
 
         foreach ($events as $eventData) {
             $sourceUrl = $this->canonicalSourceUrl($eventData['source_url']);
@@ -37,12 +39,16 @@ class IcsImportController extends Controller
 
             if ($this->alreadyExists($sourceUrl, $facebookId, $eventData['uid'])) {
                 $skipped++;
+                $details[] = [
+                    'title' => $eventData['title'],
+                    'result' => 'skipped',
+                ];
 
                 continue;
             }
 
             try {
-                Event::create([
+                $event = Event::create([
                     'title' => $eventData['title'],
                     'description' => $eventData['description'],
                     'date_start' => $eventData['date_start'],
@@ -53,24 +59,45 @@ class IcsImportController extends Controller
                     'source_type' => $facebookId ? 'facebook' : 'manual',
                     'facebook_event_id' => $facebookId,
                     'user_id' => $request->user()->id,
-                    'status' => 'draft',
+                    'status' => 'published',
                     'is_llm_generated' => false,
                     'llm_meta' => [
                         'connector' => 'ics',
                         'ics_uid' => $eventData['uid'],
                         'imported_at' => now()->toIso8601String(),
-                        'requires_review' => true,
+                        'requires_review' => false,
                     ],
                 ]);
                 $imported++;
+                $details[] = [
+                    'title' => $event->title,
+                    'event_id' => $event->id,
+                    'result' => 'imported',
+                ];
             } catch (Throwable $exception) {
                 $failed++;
+                $details[] = [
+                    'title' => $eventData['title'],
+                    'result' => 'failed',
+                ];
                 Log::warning('Échec de l’import d’un événement ICS.', [
                     'uid' => $eventData['uid'],
                     'message' => $exception->getMessage(),
                 ]);
             }
         }
+
+        ImportLog::create([
+            'user_id' => $request->user()->id,
+            'source' => 'ics',
+            'filename' => $request->file('calendar')->getClientOriginalName(),
+            'status' => $failed > 0 ? ($imported > 0 ? 'partial' : 'failed') : 'success',
+            'total' => count($events),
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'failed' => $failed,
+            'details' => $details,
+        ]);
 
         return back()->with('ics-import', compact('imported', 'skipped', 'failed'));
     }

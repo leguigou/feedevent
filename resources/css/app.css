@@ -78,6 +78,20 @@
                focus:outline-none transition-all duration-200;
     }
 
+    .form-label {
+        @apply mb-1.5 block text-sm font-bold text-gray-700 dark:text-gray-200;
+    }
+
+    .form-input {
+        @apply w-full min-h-11 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-gray-950
+               placeholder-gray-400 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-200
+               dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:border-brand-500 dark:focus:ring-brand-900;
+    }
+
+    .form-error {
+        @apply mt-1 block text-sm font-semibold text-red-600 dark:text-red-400;
+    }
+
     .icon-button {
         @apply inline-grid h-11 w-11 place-items-center rounded-xl text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white;
     }

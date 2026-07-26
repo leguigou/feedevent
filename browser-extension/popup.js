@@ -100,12 +100,12 @@ form.addEventListener('submit', async event => {
 
     form.hidden = true;
     success.hidden = false;
-    field('open-app').href = `${config.appUrl}/connector`;
+    field('open-app').href = `${config.appUrl}/my-events`;
   } catch (error) {
     showError(error.message || 'FeedEvent est inaccessible.');
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = 'Envoyer pour validation';
+    submitButton.textContent = 'Publier dans FeedEvent';
   }
 });
 

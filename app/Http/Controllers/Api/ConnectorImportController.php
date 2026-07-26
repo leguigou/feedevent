@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\ImportLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -38,6 +39,19 @@ class ConnectorImportController extends Controller
             ->first();
 
         if ($duplicate) {
+            ImportLog::create([
+                'user_id' => $request->user()->id,
+                'source' => 'chrome',
+                'status' => 'success',
+                'total' => 1,
+                'skipped' => 1,
+                'details' => [[
+                    'title' => $validated['title'],
+                    'event_id' => $duplicate->id,
+                    'result' => 'skipped',
+                ]],
+            ]);
+
             return response()->json([
                 'message' => 'Cet événement a déjà été importé.',
                 'event_id' => $duplicate->id,
@@ -57,17 +71,30 @@ class ConnectorImportController extends Controller
             'source_type' => $facebookId ? 'facebook' : 'scrape',
             'facebook_event_id' => $facebookId,
             'user_id' => $request->user()->id,
-            'status' => 'draft',
+            'status' => 'published',
             'is_llm_generated' => false,
             'llm_meta' => [
                 'connector' => 'chrome',
                 'imported_at' => now()->toIso8601String(),
-                'requires_review' => true,
+                'requires_review' => false,
             ],
         ]);
 
+        ImportLog::create([
+            'user_id' => $request->user()->id,
+            'source' => 'chrome',
+            'status' => 'success',
+            'total' => 1,
+            'imported' => 1,
+            'details' => [[
+                'title' => $event->title,
+                'event_id' => $event->id,
+                'result' => 'imported',
+            ]],
+        ]);
+
         return response()->json([
-            'message' => 'Événement envoyé pour validation.',
+            'message' => 'Événement publié dans FeedEvent.',
             'event' => [
                 'id' => $event->id,
                 'title' => $event->title,

@@ -7,7 +7,7 @@
                     Importer des événements
                 </h1>
                 <p class="mt-3 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-300">
-                    Glisse un calendrier ICS ou récupère les informations de la page ouverte avec le connecteur Chrome. Chaque événement arrive comme brouillon à vérifier.
+                    Glisse un calendrier ICS ou récupère les informations de la page ouverte avec le connecteur Chrome. Tes événements sont publiés immédiatement et restent modifiables.
                 </p>
             </header>
 
@@ -22,13 +22,14 @@
                     $result = session('ics-import');
                 @endphp
                 <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300" role="status">
-                    {{ $result['imported'] }} événement(s) importé(s) comme brouillons.
+                    {{ $result['imported'] }} événement(s) importé(s) et publié(s).
                     @if ($result['skipped'])
                         {{ $result['skipped'] }} doublon(s) ignoré(s).
                     @endif
                     @if ($result['failed'])
                         {{ $result['failed'] }} import(s) en erreur.
                     @endif
+                    <a href="{{ route('my-events.index') }}" class="ml-1 underline underline-offset-2">Voir mes événements</a>
                 </div>
             @endif
 
@@ -38,7 +39,7 @@
                         <p class="eyebrow">Calendriers externes</p>
                         <h2 class="mt-1 text-2xl font-black text-gray-950 dark:text-white">Importer un fichier ICS</h2>
                         <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">
-                            Dépose un export Google Calendar, Apple Calendar, Outlook ou Facebook. Les événements sont créés comme brouillons et les doublons sont ignorés.
+                            Dépose un export Google Calendar, Apple Calendar, Outlook ou Facebook. Les événements sont publiés, ajoutés à ton espace et les doublons sont ignorés.
                         </p>
                     </div>
 
@@ -90,7 +91,7 @@
                             :disabled="!fileName"
                             :class="{ 'cursor-not-allowed opacity-50': !fileName }"
                         >
-                            Importer comme brouillons
+                            Importer et publier
                         </button>
                     </form>
                 </div>

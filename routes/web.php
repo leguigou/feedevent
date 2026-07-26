@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\ConnectorController;
 use App\Http\Controllers\IcsImportController;
+use App\Http\Controllers\MyEventController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/connector/ics', [IcsImportController::class, 'store'])
         ->middleware('throttle:10,1')
         ->name('connector.ics.store');
+
+    Route::get('/my-events', [MyEventController::class, 'index'])->name('my-events.index');
+    Route::get('/my-events/{event}/edit', [MyEventController::class, 'edit'])->name('my-events.edit');
+    Route::put('/my-events/{event}', [MyEventController::class, 'update'])->name('my-events.update');
+    Route::patch('/my-events/{event}/status', [MyEventController::class, 'updateStatus'])->name('my-events.status');
+    Route::delete('/my-events/{event}', [MyEventController::class, 'destroy'])->name('my-events.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

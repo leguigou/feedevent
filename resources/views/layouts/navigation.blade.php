@@ -11,6 +11,7 @@
                 <x-nav-link :href="route('calendar')" :active="request()->routeIs('calendar')">Agenda</x-nav-link>
                 @auth
                     <x-nav-link :href="route('saved')" :active="request()->routeIs('saved')">Favoris</x-nav-link>
+                    <x-nav-link :href="route('my-events.index')" :active="request()->routeIs('my-events.*')">Mes événements</x-nav-link>
                 @endauth
             </div>
         </div>
@@ -27,12 +28,12 @@
             </button>
 
             @auth
-                <div class="hidden md:block">
+                <div class="block">
                     <x-dropdown align="right" width="56" contentClasses="py-1 bg-white dark:bg-gray-900">
                         <x-slot name="trigger">
                             <button type="button" class="flex min-h-11 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800" aria-label="Ouvrir le menu du compte">
                                 <span class="grid h-8 w-8 place-items-center rounded-xl bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">{{ mb_strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}</span>
-                                <span>{{ Auth::user()->name }}</span>
+                                <span class="hidden md:inline">{{ Auth::user()->name }}</span>
                             </button>
                         </x-slot>
                         <x-slot name="content">
@@ -40,6 +41,7 @@
                             @if(Auth::user()->role === 'admin')
                                 <x-dropdown-link :href="route('admin')">Administration</x-dropdown-link>
                             @endif
+                            <x-dropdown-link :href="route('my-events.index')">Mes événements</x-dropdown-link>
                             <x-dropdown-link :href="route('connector.index')">Importer des événements</x-dropdown-link>
                             <x-dropdown-link :href="route('profile.edit')">Mon profil</x-dropdown-link>
                             <form method="POST" action="{{ route('logout') }}">
@@ -75,9 +77,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20.5 4.8 13.6A4.8 4.8 0 0 1 11.6 6.8l.4.4.4-.4a4.8 4.8 0 1 1 6.8 6.8L12 20.5Z"/></svg>
             <span>Favoris</span>
         </a>
-        <a href="{{ route('profile.edit') }}" class="mobile-tab {{ request()->routeIs('profile.*') ? 'mobile-tab-active' : '' }}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
-            <span>Profil</span>
+        <a href="{{ route('my-events.index') }}" class="mobile-tab {{ request()->routeIs('my-events.*') ? 'mobile-tab-active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Zm3 7h3m-3 4h7"/></svg>
+            <span>Mes événements</span>
         </a>
     @else
         <a href="{{ route('login') }}" class="mobile-tab">

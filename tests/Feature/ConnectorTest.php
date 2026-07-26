@@ -43,7 +43,7 @@ class ConnectorTest extends TestCase
         $zip->close();
     }
 
-    public function test_valid_connector_token_creates_a_draft_event(): void
+    public function test_valid_connector_token_publishes_event_and_logs_import(): void
     {
         $user = User::factory()->create();
         $plainToken = 'connector-token-'.str_repeat('a', 64);
@@ -65,17 +65,23 @@ class ConnectorTest extends TestCase
                 'longitude' => -1.553621,
             ])
             ->assertCreated()
-            ->assertJsonPath('event.status', 'draft');
+            ->assertJsonPath('event.status', 'published');
 
         $this->assertDatabaseHas('events', [
             'title' => 'Concert importé',
-            'status' => 'draft',
+            'status' => 'published',
             'source_type' => 'facebook',
             'facebook_event_id' => '123456789',
             'source_url' => 'https://www.facebook.com/events/123456789/',
             'user_id' => $user->id,
             'latitude' => 47.218371,
             'longitude' => -1.553621,
+        ]);
+        $this->assertDatabaseHas('import_logs', [
+            'user_id' => $user->id,
+            'source' => 'chrome',
+            'total' => 1,
+            'imported' => 1,
         ]);
     }
 
@@ -131,6 +137,11 @@ class ConnectorTest extends TestCase
             ->assertConflict();
 
         $this->assertSame(1, Event::withTrashed()->count());
+        $this->assertDatabaseHas('import_logs', [
+            'user_id' => $user->id,
+            'source' => 'chrome',
+            'skipped' => 1,
+        ]);
     }
 
     public function test_user_can_only_revoke_their_own_connector(): void

@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(ConnectorToken::class);
     }
+
+    public function importLogs(): HasMany
+    {
+        return $this->hasMany(ImportLog::class);
+    }
 }

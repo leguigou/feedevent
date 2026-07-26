@@ -11,7 +11,7 @@ class IcsImportTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_authenticated_user_can_import_an_ics_file_as_drafts(): void
+    public function test_authenticated_user_can_import_and_publish_an_ics_file(): void
     {
         $user = User::factory()->create();
         $calendar = <<<'ICS'
@@ -46,8 +46,15 @@ ICS;
             'source_url' => 'https://www.facebook.com/events/1245674667674500/',
             'facebook_event_id' => '1245674667674500',
             'source_type' => 'facebook',
-            'status' => 'draft',
+            'status' => 'published',
             'user_id' => $user->id,
+        ]);
+        $this->assertDatabaseHas('import_logs', [
+            'user_id' => $user->id,
+            'source' => 'ics',
+            'filename' => 'facebook.ics',
+            'total' => 1,
+            'imported' => 1,
         ]);
     }
 
@@ -78,8 +85,9 @@ ICS;
         $this->assertDatabaseHas('events', [
             'title' => 'Concert local',
             'source_type' => 'manual',
-            'status' => 'draft',
+            'status' => 'published',
         ]);
+        $this->assertDatabaseCount('import_logs', 2);
     }
 
     public function test_invalid_ics_file_is_rejected(): void
