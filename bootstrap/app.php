@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\AuthenticateConnector;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,6 +22,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => AdminMiddleware::class,
+            'connector.token' => AuthenticateConnector::class,
+        ]);
+        $middleware->validateCsrfTokens(except: [
+            'api/connector/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

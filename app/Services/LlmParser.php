@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Helpers\DateNormalizer;
 use App\Models\Category;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
@@ -18,6 +17,8 @@ use Illuminate\Support\Facades\Log;
  */
 class LlmParser
 {
+    public function __construct(private readonly SettingManager $settings) {}
+
     /**
      * HTTP timeout in seconds.
      */
@@ -33,7 +34,7 @@ class LlmParser
      *
      * @param  array  $sources  Array of source strings (URLs or local image paths)
      * @param  int|null  $userId  Optional user ID to associate with the parsed event
-     * @return array  Parsed result with event data and metadata
+     * @return array Parsed result with event data and metadata
      */
     public function parse(array $sources, ?int $userId = null): array
     {
@@ -71,7 +72,7 @@ class LlmParser
      * Parse a single URL and extract event information via LLM.
      *
      * @param  string  $url  The URL to parse
-     * @return array|null  Structured event data or null on failure
+     * @return array|null Structured event data or null on failure
      */
     public function parseUrl(string $url): ?array
     {
@@ -97,7 +98,7 @@ class LlmParser
      * Parse an image to extract event information via Vision LLM.
      *
      * @param  string  $imagePath  Local path or URL to the image
-     * @return array|null  Structured event data or null on failure
+     * @return array|null Structured event data or null on failure
      */
     public function parseImage(string $imagePath): ?array
     {
@@ -115,7 +116,7 @@ class LlmParser
      * Fetch a preview of parsed data WITHOUT creating an event.
      *
      * @param  string  $source  URL to parse for preview
-     * @return array  Parsed data with confidence info
+     * @return array Parsed data with confidence info
      */
     public function parsePreview(string $source): array
     {
@@ -125,7 +126,7 @@ class LlmParser
             $parsed = match ($type) {
                 'url' => $this->parseUrl($source),
                 'image' => $this->parseImage($source),
-                default => throw new Exception("Unsupported source type"),
+                default => throw new Exception('Unsupported source type'),
             };
 
             if ($parsed === null) {
@@ -192,7 +193,7 @@ class LlmParser
     {
         // Ensure the URL has a scheme
         if (! preg_match('#^https?://#i', $url)) {
-            $url = 'https://' . $url;
+            $url = 'https://'.$url;
         }
 
         try {
@@ -288,7 +289,7 @@ class LlmParser
         if (! file_exists($imagePath)) {
             // Maybe it's a URL without scheme — try prepending
             if (preg_match('#^[a-z0-9]([-a-z0-9]*[a-z0-9])?\.[a-z]{2,}#i', $imagePath)) {
-                return ['type' => 'url', 'data' => 'https://' . $imagePath];
+                return ['type' => 'url', 'data' => 'https://'.$imagePath];
             }
 
             return null;
@@ -422,7 +423,7 @@ PROMPT;
      */
     protected function buildVisionUserPrompt(array $imageData): string
     {
-        return <<<PROMPT
+        return <<<'PROMPT'
 Cette image contient probablement un flyer ou une affiche d'événement.
 Extrais toutes les informations de l'événement (titre, date, lieu, description, prix, organisateur, etc.)
 et retourne-les au format JSON demandé.
@@ -438,15 +439,15 @@ PROMPT;
      */
     protected function callOpenRouter(string $systemPrompt, string $userPrompt): ?array
     {
-        $apiKey = config('services.openrouter.api_key');
+        $apiKey = $this->settings->get('llm.api_key');
 
         if (empty($apiKey)) {
             Log::error('LlmParser: OPENROUTER_API_KEY is not configured');
             throw new Exception('OpenRouter API key is not configured');
         }
 
-        $model = config('services.openrouter.model', 'deepseek/deepseek-chat');
-        $baseUrl = config('services.openrouter.base_url', 'https://openrouter.ai/api/v1');
+        $model = $this->settings->get('llm.model', 'deepseek/deepseek-chat');
+        $baseUrl = rtrim($this->settings->get('llm.base_url', 'https://openrouter.ai/api/v1'), '/');
 
         $payload = [
             'model' => $model,
@@ -454,8 +455,8 @@ PROMPT;
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userPrompt],
             ],
-            'temperature' => 0.1,
-            'max_tokens' => 2000,
+            'temperature' => (float) $this->settings->get('llm.temperature', 0.1),
+            'max_tokens' => (int) $this->settings->get('llm.max_tokens', 2000),
             'response_format' => ['type' => 'json_object'],
         ];
 
@@ -467,15 +468,15 @@ PROMPT;
      */
     protected function callOpenRouterVision(string $systemPrompt, string $userPrompt, array $imageData): ?array
     {
-        $apiKey = config('services.openrouter.api_key');
+        $apiKey = $this->settings->get('llm.api_key');
 
         if (empty($apiKey)) {
             Log::error('LlmParser: OPENROUTER_API_KEY is not configured');
             throw new Exception('OpenRouter API key is not configured');
         }
 
-        $visionModel = config('services.openrouter.vision_model', 'meta-llama/llama-3.2-11b-vision-instruct');
-        $baseUrl = config('services.openrouter.base_url', 'https://openrouter.ai/api/v1');
+        $visionModel = $this->settings->get('llm.vision_model', 'meta-llama/llama-3.2-11b-vision-instruct');
+        $baseUrl = rtrim($this->settings->get('llm.base_url', 'https://openrouter.ai/api/v1'), '/');
 
         // Build message with image content
         $userContent = [
@@ -494,8 +495,8 @@ PROMPT;
                 ['role' => 'system', 'content' => $systemPrompt],
                 ['role' => 'user', 'content' => $userContent],
             ],
-            'temperature' => 0.1,
-            'max_tokens' => 2000,
+            'temperature' => (float) $this->settings->get('llm.temperature', 0.1),
+            'max_tokens' => (int) $this->settings->get('llm.max_tokens', 2000),
             'response_format' => ['type' => 'json_object'],
         ];
 
@@ -510,12 +511,12 @@ PROMPT;
         try {
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
-                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Authorization' => 'Bearer '.$apiKey,
                     'Content-Type' => 'application/json',
                     'HTTP-Referer' => config('app.url', 'http://localhost'),
                     'X-Title' => 'FeedEvent',
                 ])
-                ->post($baseUrl . '/chat/completions', $payload);
+                ->post($baseUrl.'/chat/completions', $payload);
 
             if (! $response->successful()) {
                 Log::error('LlmParser: API request failed', [
@@ -545,7 +546,7 @@ PROMPT;
             return $json;
         } catch (ConnectionException $e) {
             Log::error('LlmParser: Connection error to API', ['error' => $e->getMessage()]);
-            throw new Exception('Connection error to LLM API: ' . $e->getMessage());
+            throw new Exception('Connection error to LLM API: '.$e->getMessage());
         }
     }
 
@@ -635,7 +636,7 @@ PROMPT;
                 'sources' => [$data['_source']],
                 'source_types' => [$data['_type']],
                 'confidence' => $data['confidence'],
-                'model' => config('services.openrouter.model', 'deepseek/deepseek-chat'),
+                'model' => $this->settings->get('llm.model', 'deepseek/deepseek-chat'),
             ];
 
             unset($data['_source'], $data['_type']);
@@ -663,7 +664,7 @@ PROMPT;
             'sources' => $sources,
             'source_types' => $types,
             'confidence' => $best['confidence'],
-            'model' => config('services.openrouter.model', 'deepseek/deepseek-chat'),
+            'model' => $this->settings->get('llm.model', 'deepseek/deepseek-chat'),
             'merged_from_count' => count($results),
         ];
 

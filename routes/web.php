@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\ConnectorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebController;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +19,7 @@ Route::get('/dashboard', function () {
 
 Route::get('/admin', function () {
     return view('admin');
-})->middleware(['auth'])->name('admin');
+})->middleware(['auth', 'admin'])->name('admin');
 
 // Admin API routes (under web middleware for session support)
 Route::middleware(['auth', 'admin'])->prefix('api/admin')->group(function () {
@@ -35,12 +36,23 @@ Route::middleware(['auth', 'admin'])->prefix('api/admin')->group(function () {
     Route::delete('categories/{category}', [AdminController::class, 'deleteCategory']);
 
     Route::get('users', [AdminController::class, 'users']);
+    Route::patch('users/{user}', [AdminController::class, 'updateUser']);
+    Route::delete('users/{user}', [AdminController::class, 'deleteUser']);
+
+    Route::get('settings', [AdminController::class, 'settings']);
+    Route::put('settings', [AdminController::class, 'updateSettings']);
 
     Route::get('logs', [AdminController::class, 'logs']);
     Route::delete('logs', [AdminController::class, 'clearLogs']);
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/connector', [ConnectorController::class, 'index'])->name('connector.index');
+    Route::post('/connector/download', [ConnectorController::class, 'download'])
+        ->middleware('throttle:5,1')
+        ->name('connector.download');
+    Route::delete('/connector/tokens/{token}', [ConnectorController::class, 'revoke'])->name('connector.tokens.revoke');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

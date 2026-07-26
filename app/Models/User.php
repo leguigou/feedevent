@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -24,6 +24,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -55,5 +57,10 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Event::class, 'event_user')
             ->withTimestamps();
+    }
+
+    public function connectorTokens(): HasMany
+    {
+        return $this->hasMany(ConnectorToken::class);
     }
 }

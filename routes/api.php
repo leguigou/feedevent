@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ConnectorImportController;
 use App\Http\Controllers\Api\EventController;
 use App\Http\Controllers\Api\EventImportController;
 use Illuminate\Support\Facades\Route;
@@ -19,3 +20,6 @@ Route::post('events/{event}/save', [EventController::class, 'toggleSave'])->midd
 Route::get('saved-events', [EventController::class, 'saved'])->middleware('auth');
 
 Route::get('recommendations', [EventController::class, 'recommendations'])->middleware('auth');
+
+Route::post('connector/events', [ConnectorImportController::class, 'store'])
+    ->middleware(['connector.token', 'throttle:30,1']);

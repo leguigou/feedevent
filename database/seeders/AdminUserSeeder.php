@@ -10,7 +10,7 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $password = env('ADMIN_PASSWORD');
+        $password = config('feedevent.admin.password');
 
         if (! $password) {
             $this->command?->warn('ADMIN_PASSWORD absent : aucun compte administrateur créé.');
@@ -19,11 +19,12 @@ class AdminUserSeeder extends Seeder
         }
 
         User::updateOrCreate(
-            ['email' => env('ADMIN_EMAIL', 'admin@feedevent.fr')],
+            ['email' => config('feedevent.admin.email')],
             [
-                'name' => env('ADMIN_NAME', 'Admin Feedevent'),
+                'name' => config('feedevent.admin.name'),
                 'password' => Hash::make($password),
                 'role' => 'admin',
+                'is_active' => true,
             ],
         );
     }

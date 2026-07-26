@@ -1,9 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+            <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 ⚙️ Administration
-            </h2>
+            </h1>
         </div>
     </x-slot>
 
@@ -62,14 +62,14 @@
                             </div>
                             <div class="event-card p-4 text-center">
                                 <div class="text-2xl mb-1">🏷️</div>
-                                <div class="text-2xl font-bold text-brand-600" x-text="stats.total_categories"></div>
+                                <div class="text-2xl font-bold text-brand-600 dark:text-brand-300" x-text="stats.total_categories"></div>
                                 <div class="text-xs text-gray-500">Catégories</div>
                             </div>
                         </div>
 
                         <!-- Graphique : Événements par mois (barres simples) -->
                         <div class="event-card p-4 sm:p-6 mb-6">
-                            <h3 class="font-bold text-gray-900 dark:text-white mb-4">Événements par mois</h3>
+                            <h2 class="font-bold text-gray-900 dark:text-white mb-4">Événements par mois</h2>
                             <div class="flex items-end gap-1.5 sm:gap-2 h-32 sm:h-40 overflow-x-auto pb-2">
                                 <template x-for="(count, month) in stats.events_by_month" :key="month">
                                     <div class="flex flex-col items-center gap-1 min-w-[32px] sm:min-w-[40px]">
@@ -77,10 +77,10 @@
                                             :style="`height: ${Math.max(4, (count / maxMonthCount) * 120)}px`"
                                             :title="`${month}: ${count} événements`">
                                         </div>
-                                        <span class="text-[10px] text-gray-400 truncate w-full text-center" x-text="month.slice(5)"></span>
+                                        <span class="text-[10px] text-gray-600 dark:text-gray-400 truncate w-full text-center" x-text="month.slice(5)"></span>
                                     </div>
                                 </template>
-                                <div x-show="Object.keys(stats.events_by_month || {}).length === 0" class="text-sm text-gray-400 py-8 w-full text-center">
+                                <div x-show="Object.keys(stats.events_by_month || {}).length === 0" class="text-sm text-gray-600 dark:text-gray-400 py-8 w-full text-center">
                                     Aucune donnée
                                 </div>
                             </div>
@@ -89,7 +89,7 @@
                         <!-- Deux colonnes : Catégories + Likes -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <div class="event-card p-4 sm:p-6">
-                                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Événements par catégorie</h3>
+                                <h2 class="font-bold text-gray-900 dark:text-white mb-4">Événements par catégorie</h2>
                                 <div class="space-y-3">
                                     <template x-for="cat in stats.events_by_category" :key="cat.name">
                                         <div class="flex items-center gap-3">
@@ -111,14 +111,14 @@
                             </div>
 
                             <div class="event-card p-4 sm:p-6">
-                                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Interactions</h3>
+                                <h2 class="font-bold text-gray-900 dark:text-white mb-4">Interactions</h2>
                                 <div class="flex gap-6 items-center justify-center py-8">
                                     <div class="text-center">
                                         <div class="text-5xl mb-2">👍</div>
                                         <div class="text-3xl font-bold text-green-600" x-text="stats.total_likes"></div>
                                         <div class="text-sm text-gray-500">Likes</div>
                                     </div>
-                                    <div class="text-3xl text-gray-300 dark:text-gray-600">vs</div>
+                                    <div class="text-3xl text-gray-500 dark:text-gray-400">vs</div>
                                     <div class="text-center">
                                         <div class="text-5xl mb-2">👎</div>
                                         <div class="text-3xl font-bold text-red-600" x-text="stats.total_dislikes"></div>
@@ -293,10 +293,13 @@
 
             <!-- ═══════════ UTILISATEURS ═══════════ -->
             <div x-show="activeTab === 'users'" x-cloak>
-                <div class="mb-4">
+                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <input type="text" x-model="userSearch" @input.debounce="loadUsers(1)"
                         placeholder="Rechercher un utilisateur..."
                         class="search-input !py-2 text-sm max-w-sm">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Les comptes suspendus ne peuvent plus se connecter.
+                    </p>
                 </div>
 
                 <div class="event-card overflow-hidden">
@@ -306,34 +309,59 @@
                                 <tr>
                                     <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Nom</th>
                                     <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Email</th>
-                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden sm:table-cell">Rôle</th>
-                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden md:table-cell">Événements</th>
-                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden md:table-cell">Inscrit le</th>
+                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Rôle</th>
+                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400 hidden lg:table-cell">Activité</th>
+                                    <th class="text-left px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Statut</th>
+                                    <th class="text-right px-4 py-3 font-semibold text-gray-600 dark:text-gray-400">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
                                 <tr x-show="usersLoading">
-                                    <td colspan="5" class="px-4 py-8 text-center text-gray-400">Chargement...</td>
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Chargement...</td>
                                 </tr>
                                 <template x-for="user in users" :key="user.id">
                                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-white" x-text="user.name"></td>
-                                        <td class="px-4 py-3 text-gray-500" x-text="user.email"></td>
-                                        <td class="px-4 py-3 hidden sm:table-cell">
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
-                                                  :class="user.role === 'admin'
-                                                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400'
-                                                      : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'">
-                                                <span x-text="user.role === 'admin' ? '👑' : '👤'"></span>
-                                                <span x-text="user.role"></span>
-                                            </span>
+                                        <td class="px-4 py-3">
+                                            <div class="font-medium text-gray-900 dark:text-white" x-text="user.name"></div>
+                                            <div class="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400" x-text="`Inscrit ${formatDate(user.created_at)}`"></div>
                                         </td>
-                                        <td class="px-4 py-3 text-gray-500 hidden md:table-cell" x-text="user.events_count || 0"></td>
-                                        <td class="px-4 py-3 text-gray-400 text-xs hidden md:table-cell" x-text="formatDate(user.created_at)"></td>
+                                        <td class="px-4 py-3 text-gray-600 dark:text-gray-300" x-text="user.email"></td>
+                                        <td class="px-4 py-3">
+                                            <select :value="user.role" :aria-label="`Rôle de ${user.name}`" @change="updateUser(user, { role: $event.target.value })"
+                                                class="rounded-lg border-gray-200 bg-white py-1.5 text-xs font-semibold text-gray-700 focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                                                <option value="user">Utilisateur</option>
+                                                <option value="admin">Administrateur</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-4 py-3 hidden lg:table-cell">
+                                            <div class="flex flex-wrap gap-1 text-[11px]">
+                                                <span class="rounded-full bg-brand-50 px-2 py-1 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300" x-text="`${user.events_count || 0} événements`"></span>
+                                                <span class="rounded-full bg-gray-100 px-2 py-1 text-gray-600 dark:bg-gray-800 dark:text-gray-300" x-text="`${user.preferences_count || 0} avis`"></span>
+                                                <span class="rounded-full bg-gray-100 px-2 py-1 text-gray-600 dark:bg-gray-800 dark:text-gray-300" x-text="`${user.saved_events_count || 0} favoris`"></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold"
+                                                :class="user.is_active
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300'
+                                                    : 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300'"
+                                                x-text="user.is_active ? 'Actif' : 'Suspendu'"></span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <div class="flex justify-end gap-1">
+                                                <button type="button" @click="updateUser(user, { is_active: !user.is_active })"
+                                                    class="btn-ghost !px-2 !py-1 text-xs"
+                                                    x-text="user.is_active ? 'Suspendre' : 'Réactiver'"></button>
+                                                <button type="button" @click="deleteUser(user)"
+                                                    class="rounded-lg px-2 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+                                                    Supprimer
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </template>
                                 <tr x-show="!usersLoading && users.length === 0">
-                                    <td colspan="5" class="px-4 py-12 text-center text-gray-400">Aucun utilisateur trouvé</td>
+                                    <td colspan="6" class="px-4 py-12 text-center text-gray-500 dark:text-gray-400">Aucun utilisateur trouvé</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -348,6 +376,76 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- ═══════════ PARAMÈTRES ═══════════ -->
+            <div x-show="activeTab === 'settings'" x-cloak>
+                <div class="mb-5">
+                    <p class="eyebrow">Configuration sécurisée</p>
+                    <h2 class="mt-1 text-2xl font-bold text-gray-950 dark:text-white">Paramètres du site</h2>
+                    <p class="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-300">
+                        Les secrets sont chiffrés avec <code>APP_KEY</code>. Une valeur enregistrée ici remplace celle de l’environnement.
+                    </p>
+                </div>
+
+                <form @submit.prevent="saveSettings" class="space-y-5">
+                    <template x-for="(items, groupName) in settingsGroups" :key="groupName">
+                        <section class="event-card p-4 sm:p-6">
+                            <div class="mb-5 flex items-center justify-between gap-3">
+                                <h3 class="text-lg font-bold text-gray-950 dark:text-white" x-text="groupName"></h3>
+                                <span class="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                                    x-text="`${items.length} paramètres`"></span>
+                            </div>
+
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <template x-for="item in items" :key="item.key">
+                                    <label class="block" :class="item.type === 'boolean' ? 'md:col-span-2' : ''">
+                                        <span class="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                            <span x-text="item.label"></span>
+                                            <span x-show="item.secret && item.configured"
+                                                class="rounded-full bg-green-100 px-2 py-0.5 text-[10px] text-green-700 dark:bg-green-950/60 dark:text-green-300">Configuré</span>
+                                            <button x-show="item.secret && item.configured && item.source === 'backoffice'" type="button" @click.prevent="clearSetting(item)"
+                                                class="text-[11px] font-semibold text-red-600 hover:underline dark:text-red-400">
+                                                Revenir à l’environnement
+                                            </button>
+                                        </span>
+
+                                        <template x-if="item.type === 'select'">
+                                            <select x-model="settingsForm[item.key]" class="search-input !py-2.5">
+                                                <template x-for="(label, value) in item.options" :key="value">
+                                                    <option :value="value" x-text="label"></option>
+                                                </template>
+                                            </select>
+                                        </template>
+
+                                        <template x-if="item.type === 'boolean'">
+                                            <span class="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-700 dark:bg-gray-900">
+                                                <input type="checkbox" x-model="settingsForm[item.key]"
+                                                    class="rounded border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-600 dark:bg-gray-800">
+                                                <span class="text-sm text-gray-700 dark:text-gray-300" x-text="settingsForm[item.key] ? 'Activé' : 'Désactivé'"></span>
+                                            </span>
+                                        </template>
+
+                                        <template x-if="!['select', 'boolean'].includes(item.type)">
+                                            <input :type="item.type" x-model="settingsForm[item.key]"
+                                                :placeholder="item.secret && item.configured ? '••••••••••••' : ''"
+                                                :step="item.key === 'llm.temperature' ? '0.1' : null"
+                                                class="search-input !py-2.5">
+                                        </template>
+
+                                        <span x-show="item.help" class="mt-1.5 block text-xs text-gray-500 dark:text-gray-400" x-text="item.help"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </section>
+                    </template>
+
+                    <div class="sticky bottom-20 z-20 flex justify-end rounded-2xl border border-gray-200 bg-white/95 p-3 shadow-xl backdrop-blur dark:border-gray-700 dark:bg-gray-900/95 lg:bottom-4">
+                        <button type="submit" class="btn-primary" :disabled="settingsSaving">
+                            <span x-text="settingsSaving ? 'Enregistrement…' : 'Enregistrer les paramètres'"></span>
+                        </button>
+                    </div>
+                </form>
             </div>
 
             <!-- ═══════════ LOGS ═══════════ -->
@@ -445,9 +543,9 @@
             <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showEventModal = false"></div>
             <div class="relative z-10 w-full sm:max-w-2xl bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">
                         <span x-text="editingEvent ? '✏️ Modifier' : '➕ Nouvel événement'"></span>
-                    </h3>
+                    </h2>
                     <button @click="showEventModal = false" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -528,9 +626,9 @@
             <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showCategoryModal = false"></div>
             <div class="relative z-10 w-full sm:max-w-md bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">
                         <span x-text="editingCategory ? '✏️ Modifier' : '➕ Nouvelle catégorie'"></span>
-                    </h3>
+                    </h2>
                     <button @click="showCategoryModal = false" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -577,7 +675,7 @@
             <div class="relative z-10 w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 mx-4">
                 <div class="text-center mb-6">
                     <div class="text-5xl mb-4">⚠️</div>
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirmer la suppression</h3>
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Confirmer la suppression</h2>
                     <p class="text-sm text-gray-500" x-text="deleteMessage"></p>
                 </div>
                 <div class="flex gap-3">
@@ -615,6 +713,7 @@
                     { id: 'events', label: 'Événements', icon: '📅' },
                     { id: 'categories', label: 'Catégories', icon: '🏷️' },
                     { id: 'users', label: 'Utilisateurs', icon: '👥' },
+                    { id: 'settings', label: 'Paramètres', icon: '⚙️' },
                     { id: 'logs', label: 'Logs', icon: '📋' },
                 ],
                 activeTab: 'dashboard',
@@ -625,6 +724,7 @@
                     if (tab === 'events') this.loadEvents(1);
                     if (tab === 'categories') this.loadCategories();
                     if (tab === 'users') this.loadUsers(1);
+                    if (tab === 'settings' && !this.settingsLoaded) this.loadSettings();
                     if (tab === 'logs') this.loadLogs(1);
                 },
 
@@ -906,6 +1006,131 @@
                         console.error('Users load error', e);
                     } finally {
                         this.usersLoading = false;
+                    }
+                },
+
+                async updateUser(user, changes) {
+                    try {
+                        const res = await fetch(`/api/admin/users/${user.id}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.getCsrf(),
+                            },
+                            body: JSON.stringify(changes),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(data.message || Object.values(data.errors || {}).flat().join(', '));
+                        }
+                        Object.assign(user, data);
+                        this.showToast('Utilisateur mis à jour');
+                    } catch (e) {
+                        await this.loadUsers(this.usersPage);
+                        this.showToast(e.message || 'Mise à jour impossible', 'error');
+                    }
+                },
+
+                async deleteUser(user) {
+                    if (!confirm(`Supprimer définitivement le compte de ${user.name} ?`)) return;
+
+                    try {
+                        const res = await fetch(`/api/admin/users/${user.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.getCsrf(),
+                            },
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(data.message || Object.values(data.errors || {}).flat().join(', '));
+                        }
+                        this.showToast('Utilisateur supprimé');
+                        await this.loadUsers(this.usersPage);
+                        await this.loadStats();
+                    } catch (e) {
+                        this.showToast(e.message || 'Suppression impossible', 'error');
+                    }
+                },
+
+                // ─── SETTINGS ────────────────────────────────
+                settingsGroups: {},
+                settingsForm: {},
+                settingsLoaded: false,
+                settingsSaving: false,
+
+                async loadSettings() {
+                    try {
+                        const res = await fetch('/api/admin/settings', {
+                            headers: { 'Accept': 'application/json' },
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Chargement impossible');
+
+                        this.settingsGroups = data.groups || {};
+                        this.settingsForm = {};
+                        Object.values(this.settingsGroups).flat().forEach(item => {
+                            this.settingsForm[item.key] = item.value ?? '';
+                        });
+                        this.settingsLoaded = true;
+                    } catch (e) {
+                        this.showToast(e.message || 'Erreur de chargement des paramètres', 'error');
+                    }
+                },
+
+                async saveSettings() {
+                    this.settingsSaving = true;
+                    try {
+                        const res = await fetch('/api/admin/settings', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.getCsrf(),
+                            },
+                            body: JSON.stringify({ settings: this.settingsForm }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(data.message || Object.values(data.errors || {}).flat().join(', '));
+                        }
+
+                        this.settingsGroups = data.groups || {};
+                        Object.values(this.settingsGroups).flat().forEach(item => {
+                            if (item.secret) this.settingsForm[item.key] = '';
+                        });
+                        this.showToast('Paramètres enregistrés');
+                    } catch (e) {
+                        this.showToast(e.message || 'Enregistrement impossible', 'error');
+                    } finally {
+                        this.settingsSaving = false;
+                    }
+                },
+
+                async clearSetting(item) {
+                    if (!confirm(`Supprimer la valeur enregistrée pour « ${item.label} » ?`)) return;
+
+                    try {
+                        const res = await fetch('/api/admin/settings', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': this.getCsrf(),
+                            },
+                            body: JSON.stringify({
+                                settings: this.settingsForm,
+                                clear: [item.key],
+                            }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Suppression impossible');
+                        await this.loadSettings();
+                        this.showToast('Valeur du back-office supprimée');
+                    } catch (e) {
+                        this.showToast(e.message || 'Suppression impossible', 'error');
                     }
                 },
 

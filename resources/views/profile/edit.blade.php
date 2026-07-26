@@ -17,6 +17,18 @@
                 </div>
             </div>
 
+            <div class="surface p-5 sm:p-8">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-950 dark:text-white">Connecteur Chrome</h2>
+                        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
+                            Importe la page d’un événement directement dans FeedEvent.
+                        </p>
+                    </div>
+                    <a href="{{ route('connector.index') }}" class="btn-primary shrink-0">Installer l’extension</a>
+                </div>
+            </div>
+
             <div class="surface border-red-200 p-5 dark:border-red-900/50 sm:p-8">
                 <div class="max-w-xl">
                     @include('profile.partials.delete-user-form')

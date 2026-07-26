@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Envoyer vers FeedEvent</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="brand">
+    <span class="brand-mark" aria-hidden="true">✦</span>
+    <span>
+      <strong>FeedEvent</strong>
+      <small>Import assisté</small>
+    </span>
+  </header>
+
+  <main>
+    <div id="status" class="status" role="status" aria-live="polite">
+      Analyse de la page ouverte…
+    </div>
+
+    <form id="event-form" hidden>
+      <p class="intro">Vérifie les informations avant de créer le brouillon.</p>
+
+      <label>
+        <span>Titre <span aria-hidden="true">*</span></span>
+        <input id="title" name="title" type="text" maxlength="255" required>
+      </label>
+
+      <div class="grid">
+        <label>
+          <span>Début <span aria-hidden="true">*</span></span>
+          <input id="date-start" name="date_start" type="datetime-local" required>
+        </label>
+        <label>
+          Fin
+          <input id="date-end" name="date_end" type="datetime-local">
+        </label>
+      </div>
+
+      <label>
+        Lieu
+        <input id="location" name="location" type="text" maxlength="255">
+      </label>
+
+      <label>
+        Adresse
+        <input id="address" name="address" type="text" maxlength="1000">
+      </label>
+
+      <label>
+        Organisateur
+        <input id="organizer" name="organizer" type="text" maxlength="255">
+      </label>
+
+      <label>
+        Description
+        <textarea id="description" name="description" rows="4" maxlength="20000"></textarea>
+      </label>
+
+      <details>
+        <summary>Informations avancées</summary>
+        <label>
+          Image
+          <input id="image-url" name="image_url" type="url" maxlength="2048">
+        </label>
+        <label>
+          Page source
+          <input id="source-url" name="source_url" type="url" readonly required>
+        </label>
+      </details>
+
+      <button id="submit-button" type="submit">Envoyer pour validation</button>
+      <p class="privacy">Une seule page est analysée, uniquement après ton clic.</p>
+    </form>
+
+    <section id="success" class="success" hidden>
+      <span class="success-icon" aria-hidden="true">✓</span>
+      <h1>Événement envoyé</h1>
+      <p>Il est enregistré comme brouillon dans FeedEvent.</p>
+      <a id="open-app" href="#" target="_blank" rel="noreferrer">Ouvrir FeedEvent</a>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

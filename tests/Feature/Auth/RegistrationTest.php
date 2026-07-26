@@ -28,4 +28,21 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
     }
+
+    public function test_registration_validation_messages_are_localized(): void
+    {
+        $response = $this->from('/register')->post('/register', [
+            'name' => '',
+            'email' => 'adresse-invalide',
+            'password' => 'court',
+            'password_confirmation' => 'court',
+        ]);
+
+        $response->assertRedirect('/register');
+        $response->assertSessionHasErrors([
+            'name' => 'Le champ nom est obligatoire.',
+            'email' => 'Le champ adresse e-mail doit être une adresse e-mail valide.',
+            'password' => 'Le champ mot de passe doit comporter au moins 8 caractères.',
+        ]);
+    }
 }

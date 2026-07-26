@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\SettingManager;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,11 +16,15 @@ use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
+    public function __construct(private readonly SettingManager $settings) {}
+
     /**
      * Display the registration view.
      */
     public function create(): View
     {
+        abort_unless($this->settings->get('site.registration_enabled', true), 404);
+
         return view('auth.register');
     }
 
@@ -30,6 +35,8 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        abort_unless($this->settings->get('site.registration_enabled', true), 404);
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
