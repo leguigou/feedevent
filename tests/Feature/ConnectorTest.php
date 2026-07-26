@@ -39,6 +39,7 @@ class ConnectorTest extends TestCase
         $this->assertArrayNotHasKey('content_scripts', $manifest);
         $this->assertStringContainsString('/api/connector/events', $configuration);
         $this->assertMatchesRegularExpression('/"token":"[^"]{80}"/', $configuration);
+        $this->assertNotFalse($zip->getFromName('feedevent-connector/extractor.js'));
         $zip->close();
     }
 
@@ -58,8 +59,10 @@ class ConnectorTest extends TestCase
                 'title' => 'Concert importé',
                 'description' => 'Une soirée musicale.',
                 'date_start' => now()->addWeek()->toIso8601String(),
-                'source_url' => 'https://www.facebook.com/events/123456789/',
+                'source_url' => 'https://www.facebook.com/events/123456789/?acontext='.str_repeat('x', 400),
                 'location' => 'Nantes',
+                'latitude' => 47.218371,
+                'longitude' => -1.553621,
             ])
             ->assertCreated()
             ->assertJsonPath('event.status', 'draft');
@@ -69,7 +72,10 @@ class ConnectorTest extends TestCase
             'status' => 'draft',
             'source_type' => 'facebook',
             'facebook_event_id' => '123456789',
+            'source_url' => 'https://www.facebook.com/events/123456789/',
             'user_id' => $user->id,
+            'latitude' => 47.218371,
+            'longitude' => -1.553621,
         ]);
     }
 

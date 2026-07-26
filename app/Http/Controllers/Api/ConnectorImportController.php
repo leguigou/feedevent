@@ -19,6 +19,8 @@ class ConnectorImportController extends Controller
             'date_end' => ['nullable', 'date', 'after_or_equal:date_start'],
             'location' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'image_url' => ['nullable', 'url:http,https', 'max:2048'],
             'source_url' => ['required', 'url:http,https', 'max:2048'],
             'organizer' => ['nullable', 'string', 'max:255'],
@@ -26,6 +28,7 @@ class ConnectorImportController extends Controller
             'category_id' => ['nullable', Rule::exists('categories', 'id')],
         ]);
 
+        $validated['source_url'] = $this->canonicalSourceUrl($validated['source_url']);
         $facebookId = $this->facebookEventId($validated['source_url']);
         $duplicate = Event::withTrashed()
             ->where(function ($query) use ($facebookId, $validated) {
@@ -82,5 +85,14 @@ class ConnectorImportController extends Controller
         }
 
         return preg_match('~/events/(\d+)~', $url, $matches) ? $matches[1] : null;
+    }
+
+    private function canonicalSourceUrl(string $url): string
+    {
+        $facebookId = $this->facebookEventId($url);
+
+        return $facebookId
+            ? "https://www.facebook.com/events/{$facebookId}/"
+            : $url;
     }
 }

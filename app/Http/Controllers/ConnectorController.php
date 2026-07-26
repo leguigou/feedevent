@@ -53,7 +53,7 @@ class ConnectorController extends Controller
             json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
         );
 
-        foreach (['popup.html', 'popup.css', 'popup.js'] as $file) {
+        foreach (['popup.html', 'popup.css', 'extractor.js', 'popup.js'] as $file) {
             $zip->addFile($extensionPath.'/'.$file, 'feedevent-connector/'.$file);
         }
 

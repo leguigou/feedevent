@@ -22,73 +22,6 @@ function toLocalDateTime(value) {
   return local.toISOString().slice(0, 16);
 }
 
-function extractEventFromPage() {
-  const clean = value => typeof value === 'string'
-    ? value.replace(/\s+/g, ' ').trim()
-    : '';
-  const meta = (attribute, value) => clean(
-    document.querySelector(`meta[${attribute}="${value}"]`)?.content,
-  );
-  const types = value => Array.isArray(value) ? value : [value];
-
-  let structuredEvent = null;
-  for (const script of document.querySelectorAll('script[type="application/ld+json"]')) {
-    try {
-      const parsed = JSON.parse(script.textContent);
-      const entries = Array.isArray(parsed)
-        ? parsed
-        : (Array.isArray(parsed?.['@graph']) ? parsed['@graph'] : [parsed]);
-      structuredEvent = entries.find(entry =>
-        entry && types(entry['@type']).some(type => String(type).endsWith('Event')),
-      );
-      if (structuredEvent) break;
-    } catch {
-      // Ignore invalid JSON-LD supplied by the page.
-    }
-  }
-
-  const location = structuredEvent?.location;
-  const address = typeof location?.address === 'object'
-    ? [
-        location.address.streetAddress,
-        location.address.postalCode,
-        location.address.addressLocality,
-      ].filter(Boolean).join(', ')
-    : clean(location?.address);
-  const organizer = typeof structuredEvent?.organizer === 'object'
-    ? structuredEvent.organizer.name
-    : structuredEvent?.organizer;
-  const image = Array.isArray(structuredEvent?.image)
-    ? structuredEvent.image[0]
-    : (structuredEvent?.image?.url || structuredEvent?.image);
-
-  return {
-    title: clean(
-      structuredEvent?.name
-      || meta('property', 'og:title')
-      || document.querySelector('h1')?.textContent
-      || document.title,
-    ).replace(/\s*[|·-]\s*Facebook\s*$/i, ''),
-    description: clean(
-      structuredEvent?.description
-      || meta('property', 'og:description')
-      || meta('name', 'description'),
-    ),
-    date_start: structuredEvent?.startDate
-      || document.querySelector('time[datetime]')?.dateTime
-      || document.querySelector('[itemprop="startDate"]')?.getAttribute('content')
-      || '',
-    date_end: structuredEvent?.endDate
-      || document.querySelector('[itemprop="endDate"]')?.getAttribute('content')
-      || '',
-    location: clean(location?.name || document.querySelector('[itemprop="location"]')?.textContent),
-    address: clean(address),
-    organizer: clean(organizer),
-    image_url: clean(image || meta('property', 'og:image')),
-    source_url: window.location.href,
-  };
-}
-
 async function initialize() {
   if (!config?.apiUrl || !config?.token) {
     showError('Configuration FeedEvent absente. Télécharge à nouveau l’extension depuis ton profil.');
@@ -103,7 +36,7 @@ async function initialize() {
 
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: extractEventFromPage,
+      func: globalThis.FeedEventExtractPage,
     });
 
     field('title').value = result.title || '';
@@ -113,6 +46,8 @@ async function initialize() {
     field('location').value = result.location || '';
     field('address').value = result.address || '';
     field('organizer').value = result.organizer || '';
+    field('latitude').value = result.latitude ?? '';
+    field('longitude').value = result.longitude ?? '';
     field('image-url').value = result.image_url || '';
     field('source-url').value = result.source_url || tab.url;
 
@@ -140,6 +75,8 @@ form.addEventListener('submit', async event => {
     location: field('location').value.trim() || null,
     address: field('address').value.trim() || null,
     organizer: field('organizer').value.trim() || null,
+    latitude: field('latitude').value === '' ? null : Number(field('latitude').value),
+    longitude: field('longitude').value === '' ? null : Number(field('longitude').value),
     image_url: field('image-url').value.trim() || null,
     source_url: field('source-url').value,
   };

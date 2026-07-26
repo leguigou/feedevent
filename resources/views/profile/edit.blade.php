@@ -20,12 +20,12 @@
             <div class="surface p-5 sm:p-8">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-gray-950 dark:text-white">Connecteur Chrome</h2>
+                        <h2 class="text-lg font-bold text-gray-950 dark:text-white">Outils d’import</h2>
                         <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-300">
                             Importe la page d’un événement directement dans FeedEvent.
                         </p>
                     </div>
-                    <a href="{{ route('connector.index') }}" class="btn-primary shrink-0">Installer l’extension</a>
+                    <a href="{{ route('connector.index') }}" class="btn-primary shrink-0">Ouvrir les imports</a>
                 </div>
             </div>
 

@@ -61,6 +61,16 @@
 
       <details>
         <summary>Informations avancées</summary>
+        <div class="grid">
+          <label>
+            Latitude
+            <input id="latitude" name="latitude" type="number" step="any" min="-90" max="90">
+          </label>
+          <label>
+            Longitude
+            <input id="longitude" name="longitude" type="number" step="any" min="-180" max="180">
+          </label>
+        </div>
         <label>
           Image
           <input id="image-url" name="image_url" type="url" maxlength="2048">
@@ -83,6 +93,7 @@
     </section>
   </main>
 
+  <script src="extractor.js"></script>
   <script src="config.js"></script>
   <script src="popup.js"></script>
 </body>

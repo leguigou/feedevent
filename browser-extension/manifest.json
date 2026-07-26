@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FeedEvent — Importer un événement",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Prévisualise et envoie la page d’un événement vers FeedEvent.",
   "minimum_chrome_version": "102",
   "permissions": [

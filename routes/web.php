@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\ConnectorController;
+use App\Http\Controllers\IcsImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WebController;
 use Illuminate\Support\Facades\Route;
@@ -52,6 +53,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('throttle:5,1')
         ->name('connector.download');
     Route::delete('/connector/tokens/{token}', [ConnectorController::class, 'revoke'])->name('connector.tokens.revoke');
+    Route::post('/connector/ics', [IcsImportController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('connector.ics.store');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

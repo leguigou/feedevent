@@ -40,7 +40,7 @@
                             @if(Auth::user()->role === 'admin')
                                 <x-dropdown-link :href="route('admin')">Administration</x-dropdown-link>
                             @endif
-                            <x-dropdown-link :href="route('connector.index')">Extension Chrome</x-dropdown-link>
+                            <x-dropdown-link :href="route('connector.index')">Importer des événements</x-dropdown-link>
                             <x-dropdown-link :href="route('profile.edit')">Mon profil</x-dropdown-link>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
