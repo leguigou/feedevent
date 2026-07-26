@@ -1,146 +1,87 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80">
-    <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center gap-1 sm:gap-2">
-                <!-- Logo -->
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2">
-                        <span class="text-2xl">🎉</span>
-                        <span class="text-lg font-extrabold bg-gradient-to-r from-brand-500 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
-                            Feedevent
-                        </span>
-                        <span class="text-lg font-extrabold text-brand-600 dark:text-brand-400 sm:hidden">F</span>
-                    </a>
-                </div>
+<nav class="sticky top-0 z-50 border-b border-gray-200/70 bg-white/85 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/85" aria-label="Navigation principale">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-8">
+            <a href="{{ route('home') }}" aria-label="Feedevent, accueil">
+                <x-brand-mark />
+            </a>
 
-                <!-- Navigation Links - Desktop -->
-                <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-1">
-                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')" class="!rounded-xl">
-                        {{ __('Feed') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('calendar')" :active="request()->routeIs('calendar')" class="!rounded-xl">
-                        {{ __('Calendrier') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('map')" :active="request()->routeIs('map')" class="!rounded-xl">
-                        {{ __('Carte') }}
-                    </x-nav-link>
-                </div>
-            </div>
-
-            <!-- Right side actions -->
-            <div class="flex items-center gap-1 sm:gap-2">
-                <!-- Dark mode toggle -->
-                <button @click="toggleTheme()" 
-                        class="p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200"
-                        :title="isDark ? 'Mode clair' : 'Mode sombre'">
-                    <svg x-show="!isDark" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                    <svg x-show="isDark" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                </button>
-
-                <!-- Auth -->
+            <div class="hidden items-center gap-1 md:flex">
+                <x-nav-link :href="route('home')" :active="request()->routeIs('home')">Découvrir</x-nav-link>
+                <x-nav-link :href="route('map')" :active="request()->routeIs('map')">Carte</x-nav-link>
+                <x-nav-link :href="route('calendar')" :active="request()->routeIs('calendar')">Agenda</x-nav-link>
                 @auth
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200">
-                            <span class="hidden sm:inline">{{ Auth::user()->name }}</span>
-                            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-300 text-xs font-bold">
-                                {{ substr(Auth::user()->name, 0, 1) }}
-                            </span>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <div class="px-4 py-2 text-xs text-gray-400 border-b dark:border-gray-700">
-                            {{ Auth::user()->email }}
-                        </div>
-                        @if(Auth::user()->role === 'admin')
-                        <x-dropdown-link :href="route('admin')" class="!text-purple-600 dark:!text-purple-400">
-                            ⚙️ Administration
-                        </x-dropdown-link>
-                        @endif
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" class="!text-red-500"
-                                    onclick="event.preventDefault(); this.closest('form').submit();">
-                                {{ __('Déconnexion') }}
-                            </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-                @else
-                <div class="flex items-center gap-1.5">
-                    <a href="{{ route('login') }}" class="btn-ghost text-sm">Connexion</a>
-                    <a href="{{ route('register') }}" class="btn-primary text-sm !px-3 !py-1.5">Inscription</a>
-                </div>
+                    <x-nav-link :href="route('saved')" :active="request()->routeIs('saved')">Favoris</x-nav-link>
                 @endauth
-
-                <!-- Hamburger -->
-                <button @click="open = ! open" 
-                        class="sm:hidden p-2.5 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200">
-                    <svg class="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Responsive Navigation Menu - Mobile -->
-    <div :class="{'block': open, 'hidden': ! open}" class="sm:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div class="px-4 py-3 space-y-1">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')" class="!rounded-xl">
-                🎉 Feed
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('calendar')" :active="request()->routeIs('calendar')" class="!rounded-xl">
-                📅 Calendrier
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('map')" :active="request()->routeIs('map')" class="!rounded-xl">
-                🗺️ Carte
-            </x-responsive-nav-link>
-        </div>
+        <div class="flex items-center gap-1.5">
+            <button type="button" @click="toggleTheme()" :aria-pressed="isDark.toString()"
+                    class="icon-button" :aria-label="isDark ? 'Activer le mode clair' : 'Activer le mode sombre'">
+                <svg x-show="!isDark" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20.35 15.35A9 9 0 018.65 3.65 9 9 0 1012 21a9 9 0 008.35-5.65Z"/>
+                </svg>
+                <svg x-show="isDark" x-cloak class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.36 6.36-1.41-1.41M7.05 7.05 5.64 5.64m12.72 0-1.41 1.41M7.05 16.95l-1.41 1.41M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/>
+                </svg>
+            </button>
 
-        @auth
-        <div class="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
-            <div class="flex items-center gap-3 mb-3">
-                <span class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-100 dark:bg-brand-900 text-brand-600 dark:text-brand-300 font-bold">
-                    {{ substr(Auth::user()->name, 0, 1) }}
-                </span>
-                <div>
-                    <div class="font-medium text-sm text-gray-900 dark:text-gray-100">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-gray-500">{{ Auth::user()->email }}</div>
+            @auth
+                <div class="hidden md:block">
+                    <x-dropdown align="right" width="56" contentClasses="py-1 bg-white dark:bg-gray-900">
+                        <x-slot name="trigger">
+                            <button type="button" class="flex min-h-11 items-center gap-2 rounded-xl px-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800" aria-label="Ouvrir le menu du compte">
+                                <span class="grid h-8 w-8 place-items-center rounded-xl bg-brand-100 text-xs font-extrabold text-brand-700 dark:bg-brand-900/50 dark:text-brand-300">{{ mb_strtoupper(mb_substr(Auth::user()->name, 0, 1)) }}</span>
+                                <span>{{ Auth::user()->name }}</span>
+                            </button>
+                        </x-slot>
+                        <x-slot name="content">
+                            <div class="border-b border-gray-100 px-4 py-3 text-xs text-gray-500 dark:border-gray-800">{{ Auth::user()->email }}</div>
+                            @if(Auth::user()->role === 'admin')
+                                <x-dropdown-link :href="route('admin')">Administration</x-dropdown-link>
+                            @endif
+                            <x-dropdown-link :href="route('profile.edit')">Mon profil</x-dropdown-link>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <x-dropdown-link :href="route('logout')" class="!text-red-600" onclick="event.preventDefault(); this.closest('form').submit();">Déconnexion</x-dropdown-link>
+                            </form>
+                        </x-slot>
+                    </x-dropdown>
                 </div>
-            </div>
-            <div class="space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')" class="!rounded-xl">
-                    ⚙️ Profile
-                </x-responsive-nav-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" class="!rounded-xl !text-red-500"
-                            onclick="event.preventDefault(); this.closest('form').submit();">
-                        🚪 Déconnexion
-                    </x-responsive-nav-link>
-                </form>
-            </div>
+            @else
+                <a href="{{ route('login') }}" class="btn-ghost hidden sm:inline-flex">Connexion</a>
+                <a href="{{ route('register') }}" class="btn-primary !min-h-10 !px-3.5">S’inscrire</a>
+            @endauth
         </div>
-        @else
-        <div class="border-t border-gray-100 dark:border-gray-800 px-4 py-3 space-y-2">
-            <a href="{{ route('login') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium transition-all">
-                🔑 Se connecter
-            </a>
-            <a href="{{ route('register') }}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-all">
-                ✨ Créer un compte
-            </a>
-        </div>
-        @endauth
     </div>
+</nav>
+
+<nav class="mobile-tab-bar {{ Auth::check() ? 'grid-cols-5' : 'grid-cols-4' }} md:hidden" aria-label="Navigation mobile">
+    <a href="{{ route('home') }}" class="mobile-tab {{ request()->routeIs('home', 'events.show') ? 'mobile-tab-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 12.5 12 5l8 7.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-7.5Z"/></svg>
+        <span>Découvrir</span>
+    </a>
+    <a href="{{ route('map') }}" class="mobile-tab {{ request()->routeIs('map') ? 'mobile-tab-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Zm0 0V3m6 18V6"/></svg>
+        <span>Carte</span>
+    </a>
+    <a href="{{ route('calendar') }}" class="mobile-tab {{ request()->routeIs('calendar') ? 'mobile-tab-active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg>
+        <span>Agenda</span>
+    </a>
+    @auth
+        <a href="{{ route('saved') }}" class="mobile-tab {{ request()->routeIs('saved') ? 'mobile-tab-active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20.5 4.8 13.6A4.8 4.8 0 0 1 11.6 6.8l.4.4.4-.4a4.8 4.8 0 1 1 6.8 6.8L12 20.5Z"/></svg>
+            <span>Favoris</span>
+        </a>
+        <a href="{{ route('profile.edit') }}" class="mobile-tab {{ request()->routeIs('profile.*') ? 'mobile-tab-active' : '' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+            <span>Profil</span>
+        </a>
+    @else
+        <a href="{{ route('login') }}" class="mobile-tab">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 21a8 8 0 0 0-16 0m12-13a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z"/></svg>
+            <span>Connexion</span>
+        </a>
+    @endauth
 </nav>

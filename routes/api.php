@@ -15,5 +15,7 @@ Route::post('events', [EventController::class, 'store'])->middleware('auth');
 Route::post('events/{event}/like', [EventController::class, 'like'])->middleware('auth');
 Route::post('events/{event}/dislike', [EventController::class, 'dislike'])->middleware('auth');
 Route::delete('events/{event}/preference', [EventController::class, 'removePreference'])->middleware('auth');
+Route::post('events/{event}/save', [EventController::class, 'toggleSave'])->middleware('auth');
+Route::get('saved-events', [EventController::class, 'saved'])->middleware('auth');
 
 Route::get('recommendations', [EventController::class, 'recommendations'])->middleware('auth');

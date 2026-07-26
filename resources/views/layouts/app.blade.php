@@ -7,11 +7,20 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Feedevent') }}</title>
+        <title>{{ $pageTitle ?? config('app.name', 'Feedevent') }}</title>
+        <meta name="description" content="{{ $pageDescription ?? 'Découvre les meilleurs événements autour de toi avec Feedevent.' }}">
+        <meta name="theme-color" content="#7c3aed">
+        @stack('meta')
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=manrope:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+        <script>
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        </script>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -23,12 +32,13 @@
         </style>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+        <a href="#main-content" class="skip-link">Aller au contenu</a>
+        <div class="min-h-screen bg-[#f8f7fc] dark:bg-gray-950 transition-colors duration-300">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
+                <header class="border-b border-gray-200/70 bg-white/75 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/75">
                     <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
@@ -36,7 +46,7 @@
             @endisset
 
             <!-- Page Content -->
-            <main>
+            <main id="main-content" class="pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
                 {{ $slot }}
             </main>
         </div>

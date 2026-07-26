@@ -49,6 +49,11 @@ class Event extends Model
         return $this->hasMany(UserPreference::class);
     }
 
+    public function preferences(): HasMany
+    {
+        return $this->hasMany(UserPreference::class);
+    }
+
     public function savedBy(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'event_user')

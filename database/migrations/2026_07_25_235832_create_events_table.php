@@ -36,8 +36,13 @@ return new class extends Migration
             $table->index('date_start');
             $table->index('status');
             $table->index(['latitude', 'longitude']);
-            $table->fullText(['title', 'description']);
         });
+
+        if (Schema::getConnection()->getDriverName() === 'mysql') {
+            Schema::table('events', function (Blueprint $table) {
+                $table->fullText(['title', 'description']);
+            });
+        }
     }
 
     public function down(): void

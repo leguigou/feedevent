@@ -26,5 +26,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Famille', 'slug' => 'famille', 'color' => '#a855f7', 'icon' => '👨‍👩‍👧‍👦'],
             ['name' => 'Autre', 'slug' => 'autre', 'color' => '#6b7280', 'icon' => '📌'],
         ]);
+
+        if (env('SEED_DEMO_EVENTS', false)) {
+            $this->call(EventSeeder::class);
+        }
     }
 }

@@ -1,366 +1,501 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                🎉 Événements à proximité
-            </h2>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('calendar') }}" class="btn-ghost text-sm">
-                    📅
-                </a>
-                <a href="{{ route('map') }}" class="btn-ghost text-sm">
-                    🗺️
-                </a>
-            </div>
-        </div>
-    </x-slot>
-
-    <div class="py-4 sm:py-8" x-data="eventFeed()">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <!-- Barre de recherche -->
-            <div class="relative mb-4">
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-                <input type="text" x-model="search" @input.debounce="loadEvents()"
-                    placeholder="Rechercher un événement..."
-                    class="search-input !pl-11">
+    <div x-data="eventFeed()" @keydown.escape.window="closeAddModal()" class="overflow-hidden">
+        <section class="relative border-b border-gray-200/70 bg-white dark:border-gray-800 dark:bg-gray-950">
+            <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                <div class="absolute -right-24 -top-32 h-80 w-80 rounded-full bg-fuchsia-200/40 blur-3xl dark:bg-fuchsia-900/15"></div>
+                <div class="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-brand-200/50 blur-3xl dark:bg-brand-900/20"></div>
             </div>
 
-            <!-- Catégories - scroll horizontal mobile -->
-            <div class="mb-5 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                <div class="flex gap-2 w-max sm:w-full sm:flex-wrap sm:gap-2 pb-1">
-                    <button @click="category = null; loadEvents()"
-                        class="category-pill shrink-0"
-                        :class="!category ? 'category-pill-active' : 'category-pill-inactive'">
-                        Tous
+            <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+                <div class="max-w-3xl">
+                    <p class="eyebrow mb-3">Ton radar de sorties locales</p>
+                    <h1 class="max-w-2xl text-3xl font-black leading-[1.08] tracking-[-0.045em] text-gray-950 dark:text-white sm:text-5xl">
+                        Qu’est-ce qu’on fait <span class="text-brand-600 dark:text-brand-400">près de chez toi&nbsp;?</span>
+                    </h1>
+                    <p class="mt-4 max-w-xl text-base leading-relaxed text-gray-600 dark:text-gray-300 sm:text-lg">
+                        Concerts, expos, ateliers et pépites locales sélectionnés selon tes envies.
+                    </p>
+                </div>
+
+                <div class="mt-7 flex max-w-4xl flex-col gap-3 sm:flex-row">
+                    <label class="relative block flex-1">
+                        <span class="sr-only">Rechercher un événement</span>
+                        <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="m16.5 16.5 4 4"/>
+                        </svg>
+                        <input type="search" x-model="search" @input.debounce.350ms="loadEvents()"
+                               placeholder="Artiste, lieu, ambiance…" class="search-input !h-14 !rounded-2xl !pl-12 !shadow-lg !shadow-gray-900/5">
+                    </label>
+                    <button type="button" @click="useMyLocation()" :disabled="locating"
+                            class="btn-secondary !h-14 !rounded-2xl !px-5" :aria-busy="locating.toString()">
+                        <svg class="h-5 w-5 text-brand-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <circle cx="12" cy="12" r="3" stroke-width="1.8"/><path stroke-linecap="round" stroke-width="1.8" d="M12 3v2m0 14v2m9-9h-2M5 12H3"/>
+                        </svg>
+                        <span x-text="locating ? 'Localisation…' : locationLabel"></span>
                     </button>
-                    @foreach($categories as $cat)
-                    <button @click="category = {{ $cat->id }}; loadEvents()"
-                        class="category-pill shrink-0"
-                        :class="category === {{ $cat->id }} ? 'category-pill-active' : 'category-pill-inactive'">
-                        <span>{{ $cat->icon }}</span>
-                        <span class="hidden sm:inline">{{ $cat->name }}</span>
-                    </button>
-                    @endforeach
+                    @auth
+                        <button type="button" @click="openAddModal()" class="btn-primary !h-14 !rounded-2xl">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg>
+                            Proposer
+                        </button>
+                    @endauth
                 </div>
             </div>
+        </section>
 
-            <!-- Skeleton loading -->
-            <div x-show="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-9 lg:px-8">
+            <section aria-labelledby="quick-filters-title">
+                <h2 id="quick-filters-title" class="sr-only">Filtres rapides</h2>
+                <div class="-mx-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:px-0">
+                    <div class="flex w-max gap-2">
+                        <button type="button" @click="setDateFilter(null)" class="category-pill"
+                                :class="!dateFilter && !freeOnly ? 'category-pill-active' : 'category-pill-inactive'"
+                                :aria-pressed="(!dateFilter && !freeOnly).toString()">Tout</button>
+                        <button type="button" @click="setDateFilter('today')" class="category-pill"
+                                :class="dateFilter === 'today' ? 'category-pill-active' : 'category-pill-inactive'"
+                                :aria-pressed="(dateFilter === 'today').toString()">Aujourd’hui</button>
+                        <button type="button" @click="setDateFilter('tonight')" class="category-pill"
+                                :class="dateFilter === 'tonight' ? 'category-pill-active' : 'category-pill-inactive'"
+                                :aria-pressed="(dateFilter === 'tonight').toString()">Ce soir</button>
+                        <button type="button" @click="setDateFilter('weekend')" class="category-pill"
+                                :class="dateFilter === 'weekend' ? 'category-pill-active' : 'category-pill-inactive'"
+                                :aria-pressed="(dateFilter === 'weekend').toString()">Ce week-end</button>
+                        <button type="button" @click="freeOnly = !freeOnly; loadEvents()" class="category-pill"
+                                :class="freeOnly ? 'category-pill-active' : 'category-pill-inactive'"
+                                :aria-pressed="freeOnly.toString()">Gratuit</button>
+                        <button x-show="coords" type="button" @click="radius = radius === 10 ? 25 : 10; loadEvents()" class="category-pill category-pill-inactive">
+                            <span x-text="'À moins de ' + radius + ' km'"></span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mt-3" aria-labelledby="categories-title">
+                <h2 id="categories-title" class="sr-only">Catégories</h2>
+                <div class="-mx-4 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:px-0">
+                    <div class="flex w-max gap-2 sm:flex-wrap">
+                        @foreach($categories as $cat)
+                            <button type="button" @click="setCategory({{ $cat->id }})"
+                                    class="category-pill shrink-0"
+                                    :class="category === {{ $cat->id }} ? 'category-pill-active' : 'category-pill-inactive'"
+                                    :aria-pressed="(category === {{ $cat->id }}).toString()">
+                                <span aria-hidden="true">{{ $cat->icon }}</span>
+                                <span>{{ $cat->name }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
+            <div x-show="loading" class="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-live="polite" aria-label="Chargement des événements">
                 <template x-for="i in 6" :key="i">
                     <div class="event-card animate-pulse">
-                        <div class="h-40 bg-gray-200 dark:bg-gray-800"></div>
-                        <div class="p-4 space-y-3">
-                            <div class="h-3 bg-gray-200 dark:bg-gray-800 rounded-full w-1/3"></div>
-                            <div class="h-5 bg-gray-200 dark:bg-gray-800 rounded-full w-3/4"></div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-800 rounded-full w-full"></div>
-                            <div class="h-3 bg-gray-200 dark:bg-gray-800 rounded-full w-1/2"></div>
+                        <div class="aspect-[16/10] bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="space-y-3 p-5">
+                            <div class="h-3 w-1/3 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                            <div class="h-6 w-4/5 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+                            <div class="h-4 w-2/3 rounded-full bg-gray-200 dark:bg-gray-800"></div>
                         </div>
                     </div>
                 </template>
             </div>
 
-            <!-- Grille d'événements -->
-            <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <template x-for="event in events" :key="event.id">
-                    <div class="event-card group">
-                        <!-- Image -->
-                        <div class="relative h-40 sm:h-48 overflow-hidden bg-gradient-to-br from-brand-100 to-purple-100 dark:from-brand-900/50 dark:to-purple-900/50">
-                            <template x-if="event.image_url">
-                                <img :src="event.image_url" :alt="event.title"
-                                    class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            </template>
-                            <template x-if="!event.image_url">
-                                <div class="h-full w-full flex items-center justify-center">
-                                    <span class="text-5xl opacity-30" x-text="event.category?.icon || '📌'"></span>
-                                </div>
-                            </template>
-                            <!-- Badge date -->
-                            <div class="absolute top-3 left-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs font-bold shadow-sm">
-                                <div x-text="formatDay(event.date_start)" class="text-lg leading-none text-brand-600 dark:text-brand-400"></div>
-                                <div x-text="formatMonth(event.date_start)" class="text-gray-500 dark:text-gray-400 uppercase tracking-wider"></div>
-                            </div>
-                            <!-- Badge catégorie -->
-                            <div class="absolute top-3 right-3">
-                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-sm"
-                                      :style="{ color: event.category?.color || '#6366f1' }">
-                                    <span x-text="event.category?.icon || '📌'"></span>
-                                    <span x-text="event.category?.name || 'Autre'" class="hidden sm:inline"></span>
-                                </span>
-                            </div>
-                            <!-- Prix -->
-                            <div x-show="event.price" class="absolute bottom-3 left-3">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-green-500 text-white shadow-sm">
-                                    <span x-text="event.price + '€'"></span>
-                                </span>
-                            </div>
-                        </div>
+            <div x-show="!loading && error" x-cloak class="surface mt-8 p-8 text-center" role="alert">
+                <svg class="mx-auto h-10 w-10 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v5m0 3.5v.01M10.3 4.5 2.7 18a2 2 0 0 0 1.75 3h15.1a2 2 0 0 0 1.75-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/></svg>
+                <h2 class="mt-3 text-lg font-bold">Impossible de charger les sorties</h2>
+                <p class="mt-1 text-sm text-gray-500" x-text="error"></p>
+                <button type="button" @click="loadEvents()" class="btn-primary mt-5">Réessayer</button>
+            </div>
 
-                        <div class="p-4">
-                            <!-- Titre -->
-                            <h3 class="font-bold text-gray-900 dark:text-white mb-1.5 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-1" 
-                                x-text="event.title"></h3>
-                            
-                            <!-- Description -->
-                            <p class="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3" 
-                               x-text="event.description || 'Aucune description'"></p>
+            <section x-show="!loading && !error && featuredEvents.length" x-cloak class="mt-8" aria-labelledby="featured-title">
+                <div class="mb-4 flex items-end justify-between gap-4">
+                    <div>
+                        <p class="eyebrow">Sélection du moment</p>
+                        <h2 id="featured-title" class="mt-1 text-2xl font-black tracking-tight text-gray-950 dark:text-white sm:text-3xl">À ne pas manquer</h2>
+                    </div>
+                    <span class="hidden text-sm font-medium text-gray-500 sm:block">Mis à jour en continu</span>
+                </div>
 
-                            <!-- Infos -->
-                            <div class="space-y-1.5 mb-4">
-                                <div class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500" x-show="event.location">
-                                    <span>📍</span>
-                                    <span class="truncate" x-text="event.location"></span>
+                <div class="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-3">
+                    <template x-for="event in featuredEvents" :key="'featured-' + event.id">
+                        <article class="event-card group relative min-w-[84vw] snap-center sm:min-w-0">
+                            <a :href="eventUrl(event)" class="absolute inset-0 z-10 rounded-[1.4rem]" :aria-label="'Voir ' + event.title"></a>
+                            <div class="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-brand-100 to-fuchsia-100 dark:from-brand-950 dark:to-fuchsia-950">
+                                <template x-if="event.image_url">
+                                    <img :src="event.image_url" :alt="event.title" loading="lazy" decoding="async" x-on:error="event.image_url = null"
+                                         class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                                </template>
+                                <template x-if="!event.image_url">
+                                    <div class="grid h-full place-items-center text-6xl opacity-40" aria-hidden="true" x-text="event.category?.icon || '✦'"></div>
+                                </template>
+                                <div class="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-gray-950/80 to-transparent"></div>
+                                <div class="absolute left-4 top-4 rounded-2xl bg-white/95 px-3 py-2 text-center shadow-lg backdrop-blur dark:bg-gray-950/90">
+                                    <span class="block text-xl font-black leading-none text-brand-600" x-text="formatDay(event.date_start)"></span>
+                                    <span class="mt-1 block text-[10px] font-extrabold uppercase tracking-widest text-gray-500" x-text="formatMonth(event.date_start)"></span>
                                 </div>
-                                <div class="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
-                                    <span>🕐</span>
-                                    <span x-text="formatTime(event.date_start)"></span>
-                                    <span x-show="event.date_end" x-text="'→ ' + formatDateTime(event.date_end)"></span>
+                                <button type="button" @click.prevent.stop="saveEvent(event)" class="icon-button absolute right-3 top-3 z-20 !bg-white/90 !text-gray-800 shadow-lg backdrop-blur dark:!bg-gray-950/85 dark:!text-white"
+                                        :aria-label="event.is_saved ? 'Retirer des favoris' : 'Ajouter aux favoris'" :aria-pressed="Boolean(event.is_saved).toString()">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" :fill="event.is_saved ? 'currentColor' : 'none'" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20.5 4.8 13.6A4.8 4.8 0 0 1 11.6 6.8l.4.4.4-.4a4.8 4.8 0 1 1 6.8 6.8L12 20.5Z"/></svg>
+                                </button>
+                                <div class="absolute inset-x-0 bottom-0 p-5 text-white">
+                                    <div class="mb-2 flex items-center gap-2 text-xs font-bold text-white/80">
+                                        <span x-text="event.category?.name || 'Événement'"></span>
+                                        <span aria-hidden="true">•</span>
+                                        <span x-text="formatPrice(event.price)"></span>
+                                    </div>
+                                    <h3 class="line-clamp-2 text-xl font-black leading-tight" x-text="event.title"></h3>
+                                    <p class="mt-2 flex items-center gap-1.5 truncate text-sm text-white/80">
+                                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5" stroke-width="1.8"/></svg>
+                                        <span x-text="locationText(event)"></span>
+                                    </p>
                                 </div>
                             </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
 
-                            <!-- Actions -->
-                            <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
-                                <div class="flex items-center gap-1" x-show="$store.auth?.user">
-                                    <button @click="like(event)" :disabled="prefLoading === event.id"
-                                        class="like-btn"
-                                        :class="event.user_preference === 'like' ? 'like-btn-active' : 'like-btn-inactive'">
-                                        <span>👍</span>
-                                    </button>
-                                    <button @click="dislike(event)" :disabled="prefLoading === event.id"
-                                        class="like-btn"
-                                        :class="event.user_preference === 'dislike' ? 'dislike-btn-active' : 'like-btn-inactive'">
-                                        <span>👎</span>
-                                    </button>
+            <section x-show="!loading && !error && feedEvents.length" x-cloak class="mt-8 sm:mt-12" aria-labelledby="feed-title">
+                <div class="mb-5">
+                    <p class="eyebrow">À explorer</p>
+                    <h2 id="feed-title" class="mt-1 text-2xl font-black tracking-tight text-gray-950 dark:text-white sm:text-3xl">Toutes les sorties</h2>
+                </div>
+                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <template x-for="event in feedEvents" :key="event.id">
+                        <article class="event-card group relative">
+                            <a :href="eventUrl(event)" class="absolute inset-0 z-10 rounded-[1.4rem]" :aria-label="'Voir ' + event.title"></a>
+                            <div class="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-brand-100 to-fuchsia-100 dark:from-brand-950 dark:to-fuchsia-950">
+                                <template x-if="event.image_url">
+                                    <img :src="event.image_url" :alt="event.title" loading="lazy" decoding="async" x-on:error="event.image_url = null"
+                                         class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                                </template>
+                                <template x-if="!event.image_url">
+                                    <div class="grid h-full place-items-center text-5xl opacity-40" aria-hidden="true" x-text="event.category?.icon || '✦'"></div>
+                                </template>
+                                <div class="absolute left-3 top-3 rounded-xl bg-white/95 px-2.5 py-2 text-center shadow backdrop-blur dark:bg-gray-950/90">
+                                    <span class="block text-lg font-black leading-none text-brand-600" x-text="formatDay(event.date_start)"></span>
+                                    <span class="mt-0.5 block text-[9px] font-extrabold uppercase tracking-wider text-gray-500" x-text="formatMonth(event.date_start)"></span>
                                 </div>
-                                <button @click="saveEvent(event)" 
-                                    class="like-btn like-btn-inactive"
-                                    :class="event.is_saved ? 'text-brand-500' : ''">
-                                    <span x-text="event.is_saved ? '💜' : '🤍'"></span>
+                                <button type="button" @click.prevent.stop="saveEvent(event)" class="icon-button absolute right-3 top-3 z-20 !bg-white/90 !text-gray-800 shadow backdrop-blur dark:!bg-gray-950/85 dark:!text-white"
+                                        :aria-label="event.is_saved ? 'Retirer des favoris' : 'Ajouter aux favoris'" :aria-pressed="Boolean(event.is_saved).toString()">
+                                    <svg class="h-5 w-5" viewBox="0 0 24 24" :fill="event.is_saved ? 'currentColor' : 'none'" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20.5 4.8 13.6A4.8 4.8 0 0 1 11.6 6.8l.4.4.4-.4a4.8 4.8 0 1 1 6.8 6.8L12 20.5Z"/></svg>
                                 </button>
                             </div>
+                            <div class="p-5">
+                                <div class="mb-2 flex items-center justify-between gap-3 text-xs font-bold">
+                                    <span class="text-brand-700 dark:text-brand-300" x-text="event.category?.name || 'Événement'"></span>
+                                    <span class="text-gray-500" x-text="formatPrice(event.price)"></span>
+                                </div>
+                                <h3 class="line-clamp-2 text-lg font-black leading-snug text-gray-950 transition group-hover:text-brand-700 dark:text-white dark:group-hover:text-brand-300" x-text="event.title"></h3>
+                                <div class="mt-3 space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                                    <p class="flex items-center gap-2">
+                                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 3v3m12-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/></svg>
+                                        <span x-text="formatDate(event.date_start)"></span>
+                                    </p>
+                                    <p class="flex items-center gap-2 truncate">
+                                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5" stroke-width="1.8"/></svg>
+                                        <span class="truncate" x-text="locationText(event)"></span>
+                                    </p>
+                                </div>
+                                <span class="mt-4 inline-flex items-center gap-1 text-sm font-bold text-brand-700 dark:text-brand-300">
+                                    Découvrir
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="m9 18 6-6-6-6"/></svg>
+                                </span>
+                            </div>
+                        </article>
+                    </template>
+                </div>
+            </section>
+
+            <div x-show="!loading && !error && events.length === 0" x-cloak class="py-20 text-center">
+                <div class="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300" aria-hidden="true">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M4 6h16v13H4V6Zm4-3v3m8-3v3M8 11h8m-8 4h5"/></svg>
+                </div>
+                <h2 class="mt-5 text-xl font-black">Aucune sortie trouvée</h2>
+                <p class="mt-2 text-gray-500">Élargis la zone ou essaie d’autres filtres.</p>
+                <button type="button" @click="resetFilters()" class="btn-primary mt-6">Réinitialiser les filtres</button>
+            </div>
+
+            <div x-show="!loading && !error && hasMore" class="mt-10 text-center">
+                <button type="button" @click="loadMore()" :disabled="loadingMore" class="btn-secondary min-w-44" :aria-busy="loadingMore.toString()">
+                    <span x-text="loadingMore ? 'Chargement…' : 'Afficher plus'"></span>
+                </button>
+            </div>
+        </div>
+
+        @auth
+            <div x-show="showAddModal" x-trap.noscroll="showAddModal" x-cloak class="fixed inset-0 z-[70] flex items-end justify-center sm:items-center" role="dialog" aria-modal="true" aria-labelledby="add-event-title">
+                <button type="button" class="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" @click="closeAddModal()" aria-label="Fermer la fenêtre"></button>
+                <div class="relative z-10 max-h-[92vh] w-full overflow-y-auto rounded-t-[2rem] bg-white p-5 shadow-2xl dark:bg-gray-900 sm:max-w-xl sm:rounded-[2rem] sm:p-8">
+                    <div class="mx-auto mb-5 h-1.5 w-12 rounded-full bg-gray-200 sm:hidden dark:bg-gray-700" aria-hidden="true"></div>
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="eyebrow">Contribution locale</p>
+                            <h2 id="add-event-title" class="mt-1 text-2xl font-black">Proposer un événement</h2>
+                            <p class="mt-2 text-sm text-gray-500">Notre équipe le vérifie avant publication.</p>
                         </div>
+                        <button type="button" @click="closeAddModal()" class="icon-button shrink-0" aria-label="Fermer">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="1.8" d="m6 6 12 12M18 6 6 18"/></svg>
+                        </button>
                     </div>
-                </template>
-            </div>
 
-            <!-- Empty state -->
-            <div x-show="!loading && events.length === 0" 
-                 class="text-center py-16 sm:py-24">
-                <div class="text-7xl mb-6">📭</div>
-                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Aucun événement trouvé</h3>
-                <p class="text-gray-500 dark:text-gray-400 mb-6">Essaie de modifier tes filtres</p>
-                <button @click="category = null; search = ''; loadEvents()" class="btn-primary">
-                    🔄 Réinitialiser les filtres
-                </button>
-            </div>
-
-            <!-- Pagination -->
-            <div x-show="!loading && events.length > 0 && hasMore" class="mt-8 text-center">
-                <button @click="loadMore()" :disabled="loadingMore"
-                    class="btn-secondary">
-                    <span x-show="!loadingMore">Afficher plus</span>
-                    <span x-show="loadingMore">Chargement...</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- FAB - Ajouter un événement (mobile) -->
-        <button @click="showAddModal = true"
-            class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-40 w-14 h-14 sm:w-16 sm:h-16 
-                   rounded-2xl bg-brand-500 text-white shadow-xl hover:bg-brand-600 
-                   hover:shadow-2xl hover:scale-105 active:scale-95 
-                   transition-all duration-200 flex items-center justify-center">
-            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-            </svg>
-        </button>
-
-        <!-- Modal Ajout -->
-        <div x-show="showAddModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-             x-cloak @click.away="showAddModal = false">
-            <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="showAddModal = false"></div>
-            <div class="relative z-10 w-full sm:max-w-lg bg-white dark:bg-gray-900 rounded-t-3xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Ajouter un événement</h3>
-                    <button @click="showAddModal = false" class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+                    <form class="mt-6 space-y-4" @submit.prevent="submitEvent()">
+                        <div>
+                            <label for="event-title" class="mb-1.5 block text-sm font-bold">Titre</label>
+                            <input id="event-title" x-ref="eventTitle" type="text" x-model="newEvent.title" required maxlength="255" class="search-input" placeholder="Nom de l’événement">
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <label for="event-date" class="mb-1.5 block text-sm font-bold">Date et heure</label>
+                                <input id="event-date" type="datetime-local" x-model="newEvent.date_start" required class="search-input">
+                            </div>
+                            <div>
+                                <label for="event-category" class="mb-1.5 block text-sm font-bold">Catégorie</label>
+                                <select id="event-category" x-model="newEvent.category_id" class="search-input">
+                                    <option value="">À déterminer</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->icon }} {{ $cat->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="event-location" class="mb-1.5 block text-sm font-bold">Lieu</label>
+                            <input id="event-location" type="text" x-model="newEvent.location" maxlength="255" class="search-input" placeholder="Salle, ville ou adresse">
+                        </div>
+                        <div>
+                            <label for="event-source" class="mb-1.5 block text-sm font-bold">Lien officiel</label>
+                            <input id="event-source" type="url" x-model="newEvent.source_url" class="search-input" placeholder="https://…">
+                        </div>
+                        <p x-show="formError" x-text="formError" class="rounded-xl bg-red-50 p-3 text-sm font-medium text-red-700 dark:bg-red-950/30 dark:text-red-300" role="alert"></p>
+                        <button type="submit" :disabled="submitting" class="btn-primary w-full" :aria-busy="submitting.toString()">
+                            <span x-text="submitting ? 'Envoi en cours…' : 'Envoyer pour validation'"></span>
+                        </button>
+                    </form>
                 </div>
-
-                <!-- Mode manuel -->
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Titre</label>
-                    <input type="text" x-model="newEvent.title" placeholder="Nom de l'événement" class="search-input">
-                </div>
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date</label>
-                        <input type="datetime-local" x-model="newEvent.date_start" class="search-input">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Catégorie</label>
-                        <select x-model="newEvent.category_id" class="search-input">
-                            <option value="">Sélectionner</option>
-                            @foreach($categories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->icon }} {{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Lien URL ou image</label>
-                    <input type="text" x-model="newEvent.source_url" placeholder="https://..." class="search-input">
-                    <p class="mt-1 text-xs text-gray-400">Un LLM complétera automatiquement les infos à partir du lien</p>
-                </div>
-
-                <button @click="submitEvent()" :disabled="submitting"
-                    class="btn-primary w-full justify-center text-base">
-                    <span x-show="!submitting">✨ Ajouter l'événement</span>
-                    <span x-show="submitting">⏳ Analyse en cours...</span>
-                </button>
             </div>
-        </div>
+        @endauth
+
+        <div x-show="toast" x-transition x-cloak class="fixed bottom-24 left-1/2 z-[80] w-[calc(100%-2rem)] max-w-md -translate-x-1/2 rounded-2xl bg-gray-950 px-5 py-3.5 text-center text-sm font-bold text-white shadow-2xl md:bottom-8" role="status" aria-live="polite" x-text="toast"></div>
     </div>
 
     @push('scripts')
-    <script>
-        document.addEventListener('alpine:init', () => {
-            // Store auth global
-            Alpine.store('auth', {
-                user: {{ Auth::check() ? 'true' : 'false' }}
-            });
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.store('auth', { user: {{ Auth::check() ? 'true' : 'false' }} });
 
-            Alpine.data('eventFeed', () => ({
-                events: [],
-                loading: true,
-                loadingMore: false,
-                category: null,
-                search: '',
-                prefLoading: null,
-                page: 1,
-                hasMore: true,
-                lastPage: 1,
-                
-                showAddModal: false,
-                submitting: false,
-                newEvent: {
-                    title: '',
-                    date_start: '',
-                    category_id: '',
-                    source_url: '',
-                },
+                Alpine.data('eventFeed', () => ({
+                    events: [],
+                    loading: true,
+                    loadingMore: false,
+                    error: '',
+                    search: '',
+                    category: null,
+                    dateFilter: null,
+                    freeOnly: false,
+                    coords: null,
+                    radius: 25,
+                    locationLabel: 'Autour de moi',
+                    locating: false,
+                    page: 1,
+                    lastPage: 1,
+                    requestController: null,
+                    showAddModal: false,
+                    submitting: false,
+                    formError: '',
+                    toast: '',
+                    toastTimer: null,
+                    newEvent: { title: '', date_start: '', category_id: '', location: '', source_url: '' },
 
-                async init() {
-                    await this.loadEvents();
-                    // Watch auth store
-                    this.$watch('$store.auth.user', () => this.loadEvents());
-                },
+                    get featuredEvents() { return this.events.slice(0, 3); },
+                    get feedEvents() { return this.events.slice(3); },
+                    get hasMore() { return this.page < this.lastPage; },
 
-                async loadEvents() {
-                    this.loading = true;
-                    this.page = 1;
-                    this.hasMore = true;
-                    try {
-                        const params = new URLSearchParams();
+                    init() {
+                        try {
+                            const saved = JSON.parse(localStorage.getItem('feedevent-location'));
+                            if (saved?.latitude && saved?.longitude) {
+                                this.coords = saved;
+                                this.locationLabel = 'À proximité';
+                            }
+                        } catch (_) {}
+                        this.loadEvents();
+                    },
+
+                    params(page = 1) {
+                        const params = new URLSearchParams({ page, per_page: 18 });
                         if (this.category) params.set('category_id', this.category);
-                        if (this.search) params.set('search', this.search);
-                        params.set('per_page', '12');
-
-                        const res = await fetch(`/api/events?${params}`);
-                        const data = await res.json();
-                        this.events = data.data || [];
-                        this.lastPage = data.last_page || 1;
-                    } catch (e) {
-                        console.error('Erreur chargement events', e);
-                    } finally {
-                        this.loading = false;
-                    }
-                },
-
-                async loadMore() {
-                    if (this.page >= this.lastPage) { this.hasMore = false; return; }
-                    this.loadingMore = true;
-                    this.page++;
-                    try {
-                        const params = new URLSearchParams();
-                        if (this.category) params.set('category_id', this.category);
-                        if (this.search) params.set('search', this.search);
-                        params.set('page', this.page);
-                        params.set('per_page', '12');
-
-                        const res = await fetch(`/api/events?${params}`);
-                        const data = await res.json();
-                        this.events = [...this.events, ...(data.data || [])];
-                        this.lastPage = data.last_page || 1;
-                        if (this.page >= this.lastPage) this.hasMore = false;
-                    } catch (e) {
-                        console.error(e);
-                    } finally {
-                        this.loadingMore = false;
-                    }
-                },
-
-                formatDay(date) {
-                    return new Date(date).getDate();
-                },
-                formatMonth(date) {
-                    return new Date(date).toLocaleDateString('fr-FR', { month: 'short' });
-                },
-                formatTime(date) {
-                    return new Date(date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                },
-                formatDateTime(date) {
-                    return new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                },
-
-                async like(event) {
-                    this.prefLoading = event.id;
-                    try {
-                        const res = await fetch(`/api/events/${event.id}/like`, { method: 'POST' });
-                        if (res.ok) event.user_preference = event.user_preference === 'like' ? null : 'like';
-                    } catch (e) { console.error(e); }
-                    finally { this.prefLoading = null; }
-                },
-
-                async dislike(event) {
-                    this.prefLoading = event.id;
-                    try {
-                        const res = await fetch(`/api/events/${event.id}/dislike`, { method: 'POST' });
-                        if (res.ok) event.user_preference = event.user_preference === 'dislike' ? null : 'dislike';
-                    } catch (e) { console.error(e); }
-                    finally { this.prefLoading = null; }
-                },
-
-                saveEvent(event) {
-                    event.is_saved = !event.is_saved;
-                },
-
-                async submitEvent() {
-                    this.submitting = true;
-                    try {
-                        const res = await fetch('/api/events', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                            body: JSON.stringify({
-                                title: this.newEvent.title || 'Événement',
-                                date_start: this.newEvent.date_start || new Date().toISOString().slice(0, 16),
-                                category_id: this.newEvent.category_id || null,
-                                source_url: this.newEvent.source_url || null,
-                            })
-                        });
-                        if (res.ok) {
-                            this.showAddModal = false;
-                            this.newEvent = { title: '', date_start: '', category_id: '', source_url: '' };
-                            await this.loadEvents();
+                        if (this.search.trim()) params.set('search', this.search.trim());
+                        if (this.dateFilter) params.set('date_filter', this.dateFilter);
+                        if (this.freeOnly) params.set('free', '1');
+                        if (this.coords) {
+                            params.set('lat', this.coords.latitude);
+                            params.set('lng', this.coords.longitude);
+                            params.set('radius', this.radius);
                         }
-                    } catch (e) { console.error(e); }
-                    finally { this.submitting = false; }
-                }
-            }));
-        });
-    </script>
+                        return params;
+                    },
+
+                    async loadEvents() {
+                        this.requestController?.abort();
+                        this.requestController = new AbortController();
+                        this.loading = true;
+                        this.error = '';
+                        this.page = 1;
+                        try {
+                            const response = await fetch(`/api/events?${this.params()}`, {
+                                signal: this.requestController.signal,
+                                headers: { Accept: 'application/json' },
+                            });
+                            if (!response.ok) throw new Error('Le service est momentanément indisponible.');
+                            const data = await response.json();
+                            this.events = data.data || [];
+                            this.lastPage = data.last_page || 1;
+                        } catch (error) {
+                            if (error.name !== 'AbortError') this.error = error.message;
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+
+                    async loadMore() {
+                        if (!this.hasMore) return;
+                        this.loadingMore = true;
+                        try {
+                            const nextPage = this.page + 1;
+                            const response = await fetch(`/api/events?${this.params(nextPage)}`, { headers: { Accept: 'application/json' } });
+                            if (!response.ok) throw new Error();
+                            const data = await response.json();
+                            this.events = [...this.events, ...(data.data || [])];
+                            this.page = nextPage;
+                            this.lastPage = data.last_page || this.lastPage;
+                        } catch (_) {
+                            this.showToast('Impossible de charger plus d’événements.');
+                        } finally {
+                            this.loadingMore = false;
+                        }
+                    },
+
+                    setDateFilter(value) {
+                        this.dateFilter = this.dateFilter === value ? null : value;
+                        if (!value) this.freeOnly = false;
+                        this.loadEvents();
+                    },
+
+                    setCategory(id) {
+                        this.category = this.category === id ? null : id;
+                        this.loadEvents();
+                    },
+
+                    resetFilters() {
+                        Object.assign(this, { search: '', category: null, dateFilter: null, freeOnly: false, coords: null, radius: 25, locationLabel: 'Autour de moi' });
+                        localStorage.removeItem('feedevent-location');
+                        this.loadEvents();
+                    },
+
+                    useMyLocation() {
+                        if (!navigator.geolocation) {
+                            this.showToast('La géolocalisation n’est pas disponible sur cet appareil.');
+                            return;
+                        }
+                        this.locating = true;
+                        navigator.geolocation.getCurrentPosition(
+                            position => {
+                                this.coords = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+                                localStorage.setItem('feedevent-location', JSON.stringify(this.coords));
+                                this.locationLabel = 'À proximité';
+                                this.locating = false;
+                                this.loadEvents();
+                            },
+                            () => {
+                                this.locating = false;
+                                this.showToast('Autorise la localisation pour voir les sorties proches.');
+                            },
+                            { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+                        );
+                    },
+
+                    async request(url, options = {}) {
+                        const response = await fetch(url, {
+                            ...options,
+                            headers: {
+                                Accept: 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                ...(options.headers || {}),
+                            },
+                        });
+                        if (response.status === 401 || response.status === 419) {
+                            window.location.href = '{{ route('login') }}';
+                            throw new Error('Authentification requise');
+                        }
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'Une erreur est survenue.');
+                        return data;
+                    },
+
+                    async saveEvent(event) {
+                        if (!this.$store.auth.user) {
+                            window.location.href = '{{ route('login') }}';
+                            return;
+                        }
+                        const previous = Boolean(event.is_saved);
+                        event.is_saved = !previous;
+                        try {
+                            const data = await this.request(`/api/events/${event.id}/save`, { method: 'POST' });
+                            event.is_saved = data.is_saved;
+                            this.showToast(data.is_saved ? 'Ajouté à tes favoris' : 'Retiré de tes favoris');
+                        } catch (error) {
+                            event.is_saved = previous;
+                            if (error.message !== 'Authentification requise') this.showToast(error.message);
+                        }
+                    },
+
+                    openAddModal() {
+                        this.showAddModal = true;
+                        this.$nextTick(() => this.$refs.eventTitle?.focus());
+                    },
+
+                    closeAddModal() {
+                        if (!this.showAddModal) return;
+                        this.showAddModal = false;
+                    },
+
+                    async submitEvent() {
+                        this.submitting = true;
+                        this.formError = '';
+                        try {
+                            const data = await this.request('/api/events', {
+                                method: 'POST',
+                                body: JSON.stringify(this.newEvent),
+                            });
+                            this.closeAddModal();
+                            this.newEvent = { title: '', date_start: '', category_id: '', location: '', source_url: '' };
+                            this.showToast(data.message);
+                        } catch (error) {
+                            if (error.message !== 'Authentification requise') this.formError = error.message;
+                        } finally {
+                            this.submitting = false;
+                        }
+                    },
+
+                    showToast(message) {
+                        this.toast = message;
+                        clearTimeout(this.toastTimer);
+                        this.toastTimer = setTimeout(() => this.toast = '', 3200);
+                    },
+
+                    eventUrl(event) { return `/events/${event.id}`; },
+                    formatDay(date) { return new Date(date).getDate(); },
+                    formatMonth(date) { return new Intl.DateTimeFormat('fr-FR', { month: 'short' }).format(new Date(date)).replace('.', ''); },
+                    formatDate(date) { return new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(date)); },
+                    formatPrice(price) { return price === null || Number(price) === 0 ? 'Gratuit' : `${Number(price).toLocaleString('fr-FR')} €`; },
+                    locationText(event) {
+                        const distance = event.distance_km ? `${Number(event.distance_km).toFixed(1)} km · ` : '';
+                        return distance + (event.location || event.address || 'Lieu à confirmer');
+                    },
+                }));
+            });
+        </script>
     @endpush
 </x-app-layout>

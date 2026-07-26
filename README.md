@@ -1,70 +1,57 @@
-# Feedevent 🎉
+# Feedevent
 
-Agenda intelligent — découvre les événements près de chez toi et laisse l'algo apprendre tes goûts.
+Ton radar de sorties locales : découvre les événements près de chez toi et garde tes favoris sous la main.
 
 ## Stack
 
-- **Laravel 13** + MySQL 8.4 (Docker)
-- **Breeze** (auth Blade + Alpine)
-- **Tailwind CSS** + Vite
-- **FullCalendar.io** — calendrier interactif
-- **Leaflet + OpenStreetMap** — carte des événements
+- Laravel 13, Blade et Alpine.js
+- Tailwind CSS et Vite
+- FullCalendar pour l’agenda
+- Leaflet et MarkerCluster pour la carte
+- MySQL en production, SQLite possible en local
 
-## Quick start
+## Installation
 
 ```bash
 cp .env.example .env
 composer install
-npm install && npm run build
-
-# Démarrer MySQL (port 3307)
-docker compose up -d
-
-# Migrer + seed
-php artisan migrate:fresh --seed
-
-# Lancer le serveur
-php artisan serve --host=0.0.0.0 --port=8001
+npm install
+php artisan key:generate
+php artisan migrate --seed
+npm run build
+php artisan serve
 ```
 
-Accès : http://localhost:8001
+Pour charger les événements de démonstration, conserve `SEED_DEMO_EVENTS=true`.
 
-## Comptes
+## Compte administrateur
 
-| Rôle | Email | Password |
-|---|---|---|
-| Admin | admin@feedevent.fr | admin123 |
+Le seeder ne crée plus de compte avec un mot de passe public. Renseigne avant la migration :
 
-## Fonctionnalités (en cours)
+```dotenv
+ADMIN_NAME="Admin Feedevent"
+ADMIN_EMAIL=admin@feedevent.fr
+ADMIN_PASSWORD=un-mot-de-passe-long-et-unique
+```
 
-- [ ] Feed d'événements (liste + carte)
-- [ ] Calendrier FullCalendar
-- [ ] Like / Dislike → recommandations
-- [ ] Ajout par lien URL (LLM parse la page)
-- [ ] Ajout par affiche / flyer (OCR + Vision LLM)
-- [ ] Sync Facebook Events
-- [ ] Catégories et tags
-- [ ] Filtres (distance, date, catégorie)
-- [ ] Comptes utilisateurs
+Sans `ADMIN_PASSWORD`, aucun administrateur n’est créé.
 
-## Modèles
+## Fonctionnalités
 
-- **Event** — titre, description, dates, lieu (lat/lng), catégorie, image, source, tags, métadonnées LLM
-- **Category** — nom, slug, couleur, icône
-- **UserPreference** — like/dislike lié à un event
-- **event_user** — événements sauvegardés (favoris)
+- feed éditorial responsive et filtres rapides ;
+- recherche, catégories, date, gratuité, distance et géolocalisation ;
+- fiches événement avec partage, itinéraire, favoris et export `.ics` ;
+- carte avec marqueurs regroupés, liste et recherche dans la zone ;
+- calendrier mensuel, hebdomadaire et liste mobile ;
+- favoris persistants et préférences utilisateur ;
+- contributions placées en brouillon avant modération ;
+- administration des événements, catégories, utilisateurs et journaux ;
+- mode sombre, navigation mobile et accessibilité clavier ;
+- métadonnées Open Graph et Schema.org Event.
 
-## Structure API
+## Vérification
 
-| Méthode | Route | Description |
-|---|---|---|
-| GET | /api/events | Liste des événements |
-| GET | /api/events/{id} | Détail d'un événement |
-| POST | /api/events | Ajouter un événement |
-| POST | /api/events/{id}/like | Like |
-| POST | /api/events/{id}/dislike | Dislike |
-| GET | /api/recommendations | Recommandations perso |
-
-## Déploiement
-
-Projet prévu pour Dokploy (comme les autres projets).
+```bash
+php artisan test
+npm run build
+```
