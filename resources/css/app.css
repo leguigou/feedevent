@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    @import url('https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap');
+
+    [x-cloak] { display: none !important; }
+
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    html {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+        @apply bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+    }
+
+    /* Dark mode : classes grises plus lisibles */
+    .dark .text-gray-400 { color: #d1d5db; }
+    .dark .text-gray-500 { color: #9ca3af; }
+}
+
+@layer components {
+    .event-card {
+        @apply bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 
+               hover:shadow-lg hover:border-brand-200 dark:hover:border-brand-800 
+               transition-all duration-300 overflow-hidden;
+    }
+
+    .category-pill {
+        @apply inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200;
+    }
+    .category-pill-active {
+        @apply bg-brand-500 text-white shadow-sm ring-2 ring-brand-300;
+    }
+    .category-pill-inactive {
+        @apply bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 
+               hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-brand-300 dark:hover:border-brand-600;
+    }
+
+    .btn-primary {
+        @apply inline-flex items-center gap-2 px-4 py-2.5 bg-brand-500 text-white font-medium 
+               rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-all duration-200 
+               shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .btn-secondary {
+        @apply inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium 
+               rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 
+               active:bg-gray-100 transition-all duration-200;
+    }
+    .btn-ghost {
+        @apply inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 
+               rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200;
+    }
+
+    .like-btn {
+        @apply flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl transition-all duration-200;
+    }
+    .like-btn-active {
+        @apply bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400;
+    }
+    .like-btn-inactive {
+        @apply text-gray-400 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800;
+    }
+    .dislike-btn-active {
+        @apply bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400;
+    }
+
+    .search-input {
+        @apply w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 
+               bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+               placeholder-gray-400 dark:placeholder-gray-500
+               focus:border-brand-400 dark:focus:border-brand-500 
+               focus:ring-2 focus:ring-brand-200 dark:focus:ring-brand-800 
+               focus:outline-none transition-all duration-200;
+    }
+
+    /* FullCalendar fixes */
+    .fc {
+        @apply dark:text-gray-200;
+    }
+    .fc .fc-toolbar-title { @apply text-lg font-bold dark:text-white; }
+    .fc .fc-button-primary { 
+        @apply bg-brand-500 border-brand-500 hover:bg-brand-600 hover:border-brand-600 
+               dark:bg-brand-700 dark:border-brand-700 dark:hover:bg-brand-600; 
+    }
+    .fc .fc-daygrid-day { @apply dark:bg-gray-900; }
+    .fc .fc-daygrid-day.fc-day-today { @apply bg-brand-50 dark:bg-brand-900/20; }
+    .fc .fc-col-header-cell { @apply dark:bg-gray-800 dark:text-gray-200; }
+    .fc .fc-daygrid-day-number { @apply dark:text-gray-200; }
+    .fc .fc-daygrid-more-link { @apply text-brand-600 dark:text-brand-400; }
+    .fc .fc-list-day-cushion { @apply dark:bg-gray-800; }
+    .fc .fc-list-event:hover td { @apply dark:bg-gray-800; }
+    .fc .fc-day-other .fc-daygrid-day-top { @apply dark:opacity-40; }
+
+    .leaflet-container { @apply dark:brightness-75 dark:contrast-125; }
+}
+
+@layer utilities {
+    .bg-gray-750 { background-color: #2d2d3a; }
+    .bg-gray-950 { background-color: #0d0d14; }
+}
